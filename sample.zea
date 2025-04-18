@@ -86,7 +86,7 @@ func main argc,argv:
 	end; ! end of if
 
 	! numerical constants
-	set tmp thousand hundred fifty six;
+	set tmp trillion billion million thousand hundred fifty six;
 	set tmp ten;
 	set tmp zero;
 	set tmp eleven;
@@ -108,7 +108,7 @@ func main argc,argv:
 	println (argv zero);
 	println (tmp);
 	push four;
-	div:
+	div;
 	push five;
 	add;
 	push five;
