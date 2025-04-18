@@ -1,6 +1,8 @@
 
-! zeasm:   the programming language
-! only lower case letter and ,;:.?!"()'-
+! zeasm:   the programming language (reverse polish notation)
+
+! only lower case letters and ,;:.?!"()'-
+! ? is unused yet
 
 include "std.zea"
 
@@ -17,15 +19,20 @@ array ar hundred;
 bytes bar ten three;
 
 class myclass: 
+! fields
 var avalue;
 array arrr;
 bytes bptr;
+
+! methods
 func new: 
 	new class myclass;
 	pop this;
-	new array hundred twenty eight;
-	set this.arrr;
+
+	new array hundred twenty eight; 
+	set this.arrr ans;
 	pop this.bptr;  ! arrr and bptr point to the same memory
+
 	return this;	
 end;
 
@@ -33,19 +40,28 @@ func dispose:
 	delete this;
 end;
 
-! recusive call while a greater than zero
-func method a:
+! recusive call while a is greater than zero
+func methoda a,b:
 	push a
 	push one
 	sub
-	if a: gt this.method ans;
+	if a: gt this.methoda ans; end;
 	pop
 end;
 
 end; ! end of class myclass
 
-func main argc argv:
+func main argc,argv:
 	var tmp;	! a local variale
+	class myclass obj;	! a pointer to object of type "myclass"
+
+	obj.new;	! instantiate an object (this pointer is null) and push
+			! it to the stack
+	pop obj; 	! assign
+
+	obj.methoda ten five, minus three;
+	obj.dispose;	
+
 	push argc;
 	push one;
 	sub;
@@ -97,19 +113,27 @@ func main argc argv:
 	push five;
 	mod;
 	push one:
-	sub:
+	sub;
+	pop;
 
+	push tmp;
 	loop:
-		push tmp;
 		push one;
 		sub;
-		pop tmp;
-		if tmp: 
+		if ans: 
 			eq break;
 			gt continue;
 		end;
 	end;
-	hello tmp;
+
+	hello tmp; 
+
+	print 'anak'; ! a is zero, abcd efgh ijkl mnop, n thirteen, p  fifteen 
+		   ! - we print  carriage return and new line characters
+
+	set tmp "hello";
+	set tmp 'aa';
+
 	return zero;
 end;
 
