@@ -2,7 +2,7 @@
 ! zeasm:   the programming language (reverse polish notation)
 
 ! only lower case letters and ,;:.?!"()'-
-! ? is unused yet
+! - and ? are unused yet
 
 include "std.zea"
 
@@ -45,7 +45,7 @@ func methoda a,b:
 	push a
 	push one
 	sub
-	if a: gt this.methoda ans; end;
+	if a: gt this.methoda ans, b; end;
 	pop
 end;
 
@@ -60,6 +60,7 @@ func main argc,argv:
 	pop obj; 	! assign
 
 	obj.methoda ten five, minus three;
+	set obj.avalue eleven;
 	obj.dispose;	
 
 	push argc;
