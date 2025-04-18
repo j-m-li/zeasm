@@ -1,0 +1,124 @@
+
+! zeasm:   the programming language
+! only lower case letter and ,;:.?!"()'-
+
+include "std.zea"
+
+! function declaration
+func hello value;
+
+! a global variable initilized to zero
+var glb;
+
+! a global array of hundred cells initilized to zero
+array ar hundred;
+
+! a global array of thirteen bytes initilized to zero
+bytes bar ten three;
+
+class myclass: 
+var avalue;
+array arrr;
+bytes bptr;
+func new: 
+	new class myclass;
+	pop this;
+	new array hundred twenty eight;
+	set this.arrr;
+	pop this.bptr;  ! arrr and bptr point to the same memory
+	return this;	
+end;
+
+func dispose:
+	delete this;
+end;
+
+! recusive call while a greater than zero
+func method a:
+	push a
+	push one
+	sub
+	if a: gt this.method ans;
+	pop
+end;
+
+end; ! end of class myclass
+
+func main argc argv:
+	var tmp;	! a local variale
+	push argc;
+	push one;
+	sub;
+
+	if ans:
+		gt ( 
+			println "too many arguments"
+			return minus one
+		);
+		eq println "hello world";
+		lt println "panic";
+		ne (
+			print "argc value is: ";
+			printn argc;
+			println;
+		);
+		ge println "greater or equal";
+		le (
+			println "less or equal":
+		);
+	end; ! end of if
+
+	! numerical constants
+	set tmp thousand hundred fifty six;
+	set tmp ten;
+	set tmp zero;
+	set tmp eleven;
+	set tmp twelve;
+	set tmp twenty two;
+	set tmp thirty three;
+	set tmp forty four;
+	set tmp sixty five;
+	set tmp seventy seven;
+	set tmp eighty eight;
+	set tmp ninety nine;
+	pop tmp;
+	set tmp two;
+	push tmp;
+	push ans;
+	mul;
+	set tmp "a string":
+	print "program name equals ";
+	println (argv zero);
+	println (tmp);
+	push four;
+	div:
+	push five;
+	add;
+	push five;
+	mod;
+	push one:
+	sub:
+
+	loop:
+		push tmp;
+		push one;
+		sub;
+		pop tmp;
+		if tmp: 
+			eq break;
+			gt continue;
+		end;
+	end;
+	hello tmp;
+	return zero;
+end;
+
+! function definition
+func hello value:
+	println "the value of value is ";
+	printn value;
+	println;
+end;
+
+
+
