@@ -2855,8 +2855,8 @@ void k_include(struct trip *st)
 	st->pos += 7;
 	whitespaces(st);
 	s = str_lit(st);
-	if (strstr(s, "std.3p")) {
-		p = s +strlen(s)-2;
+	if (strstr(s, "std.zea")) {
+		p = s +strlen(s)-3;
 		o = *p;
 		*p = 0;
 		if (st->mode == MODE_INTERP) {
