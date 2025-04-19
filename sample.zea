@@ -37,16 +37,17 @@ func new:
 end;
 
 func dispose:
+	delete this.arrr;
 	delete this;
 end;
 
 ! recusive call while a is greater than zero
 func methoda a,b:
-	push a
-	push one
-	sub
-	if a: gt this.methoda ans, b; end;
-	pop
+	push a;
+	push one;
+	sub;
+	if ans: gt this.methoda ans, b; end;
+	pop;
 end;
 
 end; ! end of class myclass
@@ -69,14 +70,14 @@ func main argc,argv:
 
 	if ans:
 		gt ( 
-			println "too many arguments"
-			return minus one
+			println "too many arguments";
+			return minus one;
 		);
 		eq println "hello world";
 		lt println "panic";
 		ne (
 			print "argc value is: ";
-			printn argc;
+			printv argc;
 			println;
 		);
 		ge println "greater or equal";
@@ -103,10 +104,12 @@ func main argc,argv:
 	push tmp;
 	push ans;
 	mul;
-	set tmp "a string":
+
+	set tmp "a string";
 	print "program name equals ";
 	println (argv zero);
 	println (tmp);
+
 	push four;
 	div;
 	push five;
@@ -141,7 +144,7 @@ end;
 ! function definition
 func hello value:
 	println "the value of value is ";
-	printn value;
+	printv value;
 	println;
 end;
 
