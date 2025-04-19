@@ -2,7 +2,7 @@
 ! zeasm:   the programming language (reverse polish notation)
 
 ! only lower case letters and ,;:.?!"()'-
-! - and ? are unused yet
+! ? are unused yet
 
 include "std.zea"
 
@@ -132,11 +132,14 @@ func main argc,argv:
 
 	hello tmp; 
 
-	print 'anak'; ! a is zero, abcd efgh ijkl mnop, n thirteen, p  fifteen 
-		   ! - we print  carriage return and new line characters
+	print '-m-j';	! byte string. - is zero, a is one 
+			! binary : - abcde fghij klmno 
+			! m thirteen, o  fifteen, j ten
+		   	! we print  carriage return and new line characters
+			! ternary : zyx wvuts rqpon - abcde fghij klm
 
 	set tmp "hello";
-	set tmp 'aa';
+	set tmp '--';
 
 	return zero;
 end;
