@@ -16,6 +16,8 @@
 
 
 #define var long
+#define byte unsigned char
+
 
 #define MAX_MEMBER 1270
 #define MODE_C 0
@@ -310,6 +312,7 @@ var quit(void)
 
 var command(struct trip *st, var cmd_, var len)
 {
+	/*
 	var r = 0;
 	char *cmd = (void*)cmd_;
 	int mode = -1;
@@ -357,7 +360,7 @@ var command(struct trip *st, var cmd_, var len)
 		st->buf = obuf;
 		st->end = oend;
 	}
-	return r;
+	return r;*/
 }
 #include "file.c"
 #include "term.c"

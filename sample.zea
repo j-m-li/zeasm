@@ -9,13 +9,13 @@ include "std.zea"
 ! function declaration
 func hello value;
 
-! a global variable initilized to zero
+! a global variable unitilized
 var glb;
 
-! a global array of hundred cells initilized to zero
+! a global array of hundred cells unitilized 
 array ar hundred;
 
-! a global array of thirteen bytes initilized to zero
+! a global array of thirteen bytes uinitilized
 bytes bar ten three;
 
 class myclass: 
@@ -29,7 +29,7 @@ func new:
 	new class myclass;
 	pop this;
 
-	new array hundred twenty eight; 
+	new array hundred and twenty-eight; 
 	set this.arrr ans;
 	pop this.bptr;  ! arrr and bptr point to the same memory
 
@@ -60,7 +60,7 @@ func main argc,argv:
 			! it to the stack
 	pop obj; 	! assign
 
-	obj.methoda ten five, minus three;
+	obj.methoda fifteen, minus three;
 	set obj.avalue eleven;
 	obj.dispose;	
 
@@ -90,15 +90,23 @@ func main argc,argv:
 	set tmp trillion billion million thousand hundred fifty six;
 	set tmp ten;
 	set tmp zero;
+	set tmp two thousand and twenty-four;
+	set tmp seven hundred and twenty-one million and five hundred and sixty-three;
 	set tmp eleven;
 	set tmp twelve;
-	set tmp twenty two;
-	set tmp thirty three;
-	set tmp forty four;
-	set tmp sixty five;
-	set tmp seventy seven;
-	set tmp eighty eight;
-	set tmp ninety nine;
+	set tmp fourteen;
+	set tmp fifteen;
+	set tmp sixteen;
+	set tmp seventeen;
+	set tmp eighteen;
+	set tmp nineteen;
+	set tmp twenty-two;
+	set tmp thirty-three;
+	set tmp forty-four;
+	set tmp sixty-five;
+	set tmp seventy-seven;
+	set tmp eighty-eight;
+	set tmp ninety-nine;
 	pop tmp;
 	set tmp two;
 	push tmp;
