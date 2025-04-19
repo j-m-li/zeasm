@@ -37,10 +37,12 @@ byte buf[512];
 
 var process(var argc, byte **argv)
 {
-	if (argc < 2) {
-		return -1;
-	}
+	var c;
 
+	while ((c = getchar()) != EOF) {
+		printf(">%c", c & 0xFF);
+		fflush(stdout);
+	}
 	return 0;
 }
 
