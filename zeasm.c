@@ -34,14 +34,23 @@
 #include "std.h"
 
 byte buf[512];
+byte input[512];
 
 var process(var argc, byte **argv)
 {
-	var c;
-
+	var c, l;
+	l = 0;
 	while ((c = getchar()) != EOF) {
-		printf(">%c", c & 0xFF);
-		fflush(stdout);
+		if (l < 511) {
+			input[l] = c & 0xFF;
+			l++;
+		}
+		if (c == '\n') {
+			input[l] = '\0';
+			printf(">%s", input);
+			fflush(stdout);
+			l = 0;
+		}
 	}
 	return 0;
 }

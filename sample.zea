@@ -2,43 +2,49 @@
 ! zeasm:   the programming language (reverse polish notation)
 
 ! only lower case letters and ,;:.?!"()'-
-! ? are unused yet
+! 
 
 include "std.zea"
 
 ! function declaration
 func hello value;
 
-! a global variable unitilized
-var glb;
 
-! a global array of hundred cells unitilized 
-array ar hundred;
+! a global array of integer
+array ar zero,one,two,three,four,five,? ! ? skips blank characters and comments
+	six, seven, eight, nine,?
+	ten, eleven, twelve;
 
-! a global array of thirteen bytes uinitilized
-bytes bar ten three;
+!  global arrays of bytes 
+bytes bar '-abcdefghijklmno'; 	! eight bytes
+
+bytes str "abc";		! four bytes (strings are nul terminated)
 
 class myclass: 
 ! fields
 var avalue;
-array arrr;
-bytes bptr;
+var arrr;
+var bptr;
 
 ! methods
-func new: 
-	new class myclass;
+func new:
+	sizeof myclass;
+	new bytes;
 	pop this;
 
-	new array hundred and twenty-eight; 
+	push hundred twenty-eight; 
+	new array; 
 	set this.arrr ans;
 	pop this.bptr;  ! arrr and bptr point to the same memory
 
-	return this;	
+	push this; ! return 
 end;
 
 func dispose:
-	delete this.arrr;
-	delete this;
+	push this.arrr;
+	delete;
+	push this;
+	delete;
 end;
 
 ! recusive call while a is greater than zero
@@ -53,12 +59,16 @@ end;
 end; ! end of class myclass
 
 func main argc,argv:
-	var tmp;	! a local variale
+	var tmp;	! a local variable (integer or pointer to array)
 	class myclass obj;	! a pointer to object of type "myclass"
+	bytes bs;		! a pointer to byte
 
 	obj.new;	! instantiate an object (this pointer is null) and push
 			! it to the stack
 	pop obj; 	! assign
+
+	set bs obj.bptr;
+	set bs(zero) twenty-one;
 
 	obj.methoda fifteen, minus three;
 	set obj.avalue eleven;
@@ -90,8 +100,9 @@ func main argc,argv:
 	set tmp trillion billion million thousand hundred fifty six;
 	set tmp ten;
 	set tmp zero;
-	set tmp two thousand and twenty-four;
-	set tmp seven hundred and twenty-one million and five hundred and sixty-three;
+	set tmp two thousand twenty-four;
+	set tmp seven hundred twenty-one ? 
+		million five hundred sixty-three; ! multi line
 	set tmp eleven;
 	set tmp twelve;
 	set tmp fourteen;
@@ -115,8 +126,8 @@ func main argc,argv:
 
 	set tmp "a string";
 	print "program name equals ";
-	println (argv zero);
-	println (tmp);
+	println argv(zero); ! array access
+	println tmp;
 
 	push four;
 	div;
@@ -124,7 +135,7 @@ func main argc,argv:
 	add;
 	push five;
 	mod;
-	push one:
+	push one;
 	sub;
 	pop;
 
@@ -132,24 +143,27 @@ func main argc,argv:
 	loop:
 		push one;
 		sub;
-		if ans: 
+		if ans: 		! ans is the top of the stack
 			eq break;
 			gt continue;
 		end;
+		printv ans;
+		println;
 	end;
 
 	hello tmp; 
 
-	print '-m-j';	! byte string. - is zero, a is one 
+	print '-m-j--';	! byte string. - is zero, a is one 
 			! binary : - abcde fghij klmno 
 			! m thirteen, o  fifteen, j ten
 		   	! we print  carriage return and new line characters
-			! ternary : zyx wvuts rqpon - abcde fghij klm
+			! balanced ternary : zyx wvuts rqpon - abcde fghij klm
 
 	set tmp "hello";
 	set tmp '--';
-
-	return zero;
+	
+	push zero;
+	exit;
 end;
 
 ! function definition
