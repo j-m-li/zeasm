@@ -25,6 +25,7 @@ class myclass:
 var avalue;
 var arrr;
 var bptr;
+wire logic; 	! for hardware desciption language
 
 ! methods
 func new:
@@ -35,9 +36,9 @@ func new:
 	push hundred twenty-eight; 
 	new array; 
 	set this.arrr ans;
-	pop this.bptr;  ! arrr and bptr point to the same memory
+	pop this.bptr;  ! now arrr and bptr point to the same memory
 
-	push this; ! return 
+	push this; ! we return the value on the compute stack
 end;
 
 func dispose:
@@ -52,11 +53,11 @@ func methoda a,b:
 	push a;
 	push one;
 	sub;
-	if ans: gt this.methoda ans, b; end;
+	if ans:gt(this.methoda ans,b);:;
 	pop;
 end;
 
-end; ! end of class myclass
+end class; ! end of class myclass
 
 func main argc,argv:
 	var tmp;	! a local variable (integer or pointer to array)
@@ -65,14 +66,29 @@ func main argc,argv:
 
 	obj.new;	! instantiate an object (this pointer is null) and push
 			! it to the stack
-	pop obj; 	! assign
+	pop obj; 	! get it and assign it
 
 	set bs obj.bptr;
-	set bs(zero) twenty-one;
+	set bs(zero) twenty-one; ! set byte zero of obj.bptr to twenty-one
 
 	obj.methoda fifteen, minus three;
 	set obj.avalue eleven;
 	obj.dispose;	
+
+	! invert bit zero of argc
+	getb tmp argc zero;
+	if tmp: 
+		eq(setb argc zero);
+		ne(clrb argc zero);
+	:;
+
+	!invert trit two of argc
+	gett tmp argc two
+	if tmp:
+		lt(post argc two);
+		eq(clrt argc two);
+		gt(negt argc two);
+	:;
 
 	push argc;
 	push one;
@@ -81,20 +97,20 @@ func main argc,argv:
 	if ans:
 		gt ( 
 			println "too many arguments";
-			return minus one;
+			exit minus one;
 		);
-		eq println "hello world";
-		lt println "panic";
+		eq (println "hello world");
+		lt (println "panic");
 		ne (
 			print "argc value is: ";
 			printv argc;
 			println;
 		);
-		ge println "greater or equal";
+		ge (println "greater or equal");
 		le (
-			println "less or equal":
+			println "less or equal";
 		);
-	end; ! end of if
+	:; ! end of if
 
 	! numerical constants
 	set tmp trillion billion million thousand hundred fifty six;
@@ -144,12 +160,12 @@ func main argc,argv:
 		push one;
 		sub;
 		if ans: 		! ans is the top of the stack
-			eq break;
-			gt continue;
-		end;
+			eq(break);
+			gt(continue);
+		:;
 		printv ans;
 		println;
-	end;
+	:;
 
 	hello tmp; 
 
@@ -162,8 +178,7 @@ func main argc,argv:
 	set tmp "hello";
 	set tmp '--';
 	
-	push zero;
-	exit;
+	exit zero;
 end;
 
 ! function definition

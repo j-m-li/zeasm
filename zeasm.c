@@ -30,6 +30,10 @@
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+/*
+ Must run on a CH32x035G8R6 $0.40
+ (32bit RISC-V, 62kB Flash, 20kB SRAM, USB host/device, 48MHz) 
+*/
 
 #include "std.h"
 
