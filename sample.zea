@@ -1,7 +1,7 @@
 
 ! zeasm:   the programming language (reverse polish notation)
-
-! only lower case letters and ,;:.?!"()'-
+! ! is comments (till the end of lien)
+! only digits, lower case letters and ,;:.?!"()'-
 ! 
 
 include "std.zea"
@@ -11,9 +11,9 @@ func hello value;
 
 
 ! a global array of integer
-array ar zero,one,two,three,four,five,? ! ? skips blank characters and comments
-	six, seven, eight, nine,?
-	ten, eleven, twelve;
+array ar 0,1,2,3,4,5,? ! ? skips blank characters and comments
+	6,7,8,9,?
+	10,11,12;
 
 !  global arrays of bytes 
 bytes bar '-abcdefghijklmno'; 	! eight bytes
@@ -33,7 +33,7 @@ func new:
 	new bytes;
 	pop this;
 
-	push hundred twenty-eight; 
+	push 1024; 
 	new array; 
 	set this.arrr ans;
 	pop this.bptr;  ! now arrr and bptr point to the same memory
@@ -51,9 +51,11 @@ end;
 ! recusive call while a is greater than zero
 func methoda a,b:
 	push a;
-	push one;
+	push 1;
 	sub;
 	if ans:gt(this.methoda ans,b);:;
+	! here the value of "a" is not valid since method or function calls
+	! with arguments overwrite the memory allacates for arguments.
 	pop;
 end;
 
@@ -69,35 +71,35 @@ func main argc,argv:
 	pop obj; 	! get it and assign it
 
 	set bs obj.bptr;
-	set bs(zero) twenty-one; ! set byte zero of obj.bptr to twenty-one
+	set bs(0) 21; ! set byte zero of obj.bptr to twenty-one
 
-	obj.methoda fifteen, minus three;
-	set obj.avalue eleven;
+	obj.methoda 15, -3; ! call method
+	set obj.avalue 1;
 	obj.dispose;	
 
 	! invert bit zero of argc
-	getb tmp argc zero;
+	getb tmp argc 0;
 	if tmp: 
-		eq(setb argc zero);
-		ne(clrb argc zero);
+		eq(setb argc 0);
+		ne(clrb argc 0);
 	:;
 
 	!invert trit two of argc
-	gett tmp argc two
+	gett tmp argc 2
 	if tmp:
-		lt(post argc two);
-		eq(clrt argc two);
-		gt(negt argc two);
+		lt(post argc 2);
+		eq(clrt argc 2);
+		gt(negt argc 2);
 	:;
 
 	push argc;
-	push one;
+	push 1;
 	sub;
 
 	if ans:
 		gt ( 
 			println "too many arguments";
-			exit minus one;
+			exit -1;
 		);
 		eq (println "hello world");
 		lt (println "panic");
@@ -113,51 +115,31 @@ func main argc,argv:
 	:; ! end of if
 
 	! numerical constants
-	set tmp trillion billion million thousand hundred fifty six;
-	set tmp ten;
-	set tmp zero;
-	set tmp two thousand twenty-four;
-	set tmp seven hundred twenty-one ? 
-		million five hundred sixty-three; ! multi line
-	set tmp eleven;
-	set tmp twelve;
-	set tmp fourteen;
-	set tmp fifteen;
-	set tmp sixteen;
-	set tmp seventeen;
-	set tmp eighteen;
-	set tmp nineteen;
-	set tmp twenty-two;
-	set tmp thirty-three;
-	set tmp forty-four;
-	set tmp sixty-five;
-	set tmp seventy-seven;
-	set tmp eighty-eight;
-	set tmp ninety-nine;
+	set tmp 9000000000000;
 	pop tmp;
-	set tmp two;
+	set tmp 2;
 	push tmp;
 	push ans;
 	mul;
 
 	set tmp "a string";
 	print "program name equals ";
-	println argv(zero); ! array access
+	println argv(0); ! array access
 	println tmp;
 
-	push four;
+	push 4;
 	div;
-	push five;
+	push 5;
 	add;
-	push five;
+	push 5;
 	mod;
-	push one;
+	push 1;
 	sub;
 	pop;
 
 	push tmp;
 	loop:
-		push one;
+		push 1;
 		sub;
 		if ans: 		! ans is the top of the stack
 			eq(break);
@@ -178,7 +160,7 @@ func main argc,argv:
 	set tmp "hello";
 	set tmp '--';
 	
-	exit zero;
+	exit 0;
 end;
 
 ! function definition
