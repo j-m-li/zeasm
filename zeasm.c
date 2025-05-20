@@ -1,10 +1,11 @@
 /*
                  ZeASM programing language
+ 
+ As sun, earth, water & wind, this work is neither ours nor yours.
 
+              MMXXV May 16 PUBLIC DOMAIN by JML
 
-          MMXXV April 19 PUBLIC DOMAIN by JML
-
-     The authors and contributors disclaim copyright, patents
+    The authors and contributors disclaim copyright, patents 
            and all related rights to this software.
 
  Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -28,7 +29,6 @@
  ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 */
 /*
  Must run on a CH32x035G8R6 $0.40
@@ -37,6 +37,7 @@
  id = ((class & 0xFF) << 24) | \
  	((size & 0xFF) << 16) | \
  	(label & 0xFFFF);
+ local variables and function parameters are static.
 */
 
 #include <stdlib.h>

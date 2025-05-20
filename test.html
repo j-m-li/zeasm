@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <title>wat</title>
+   </head>
+   <body>
+	   <a href="https://developer.mozilla.org/en-US/docs/WebAssembly/Reference">https://developer.mozilla.org/en-US/docs/WebAssembly/Reference</a>
+	  <div id="x"></div>
+	  <a href="https://webassembly.org/getting-started/advanced-tools/">https://webassembly.org/getting-started/advanced-tools/</a>
+      <script> 
+         let sum; 
+         fetch("test.wasm")
+            .then(bytes => bytes.arrayBuffer()) 
+            .then(mod => WebAssembly.compile(mod)) .then(module => {
+            
+            return new WebAssembly.Instance(module) 
+         })
+         .then(instance => {
+            sum = instance.exports.add(10,40); 
+    		document.getElementById("x").innerHTML = "10 + 40 = " + sum; 
+         }); 
+      </script>
+   </body>
+</html>
+

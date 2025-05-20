@@ -1,0 +1,522 @@
+//          3o3 ternary computer emulator
+//
+// This software is dedicated to the public domain.
+//
+
+// ternary trit notation:
+// 01 = +1
+// 10 = -1
+// 00 =  0
+
+include "std.ri";
+
+struct vm3o3 (
+	b, // reg -1
+	a, // reg  0
+	c, // reg +1
+	pages,
+	flag,
+	pc,
+	sel
+);
+
+vm3o3__new()
+(
+	%self,p;
+	self = struct(vm3o3);
+	self.vm3o3.a = bytes(4); // 4 byte to represent 2 trit in ascii
+	self.vm3o3.b = bytes(4);
+	self.vm3o3.c = bytes(4);
+	self.vm3o3.pc = bytes(32);
+	self.vm3o3.sel = bytes(4);
+	p = array(6);
+	self.vm3o3.pages = p;
+	p[0] = bytes(32); // 16 trit
+	p[1] = bytes(32);
+	p[2] = bytes(32);
+	p[3] = bytes(32);
+	p[4] = bytes(32);
+	p[5] = bytes(32);
+	self.vm3o3.flag = bytes(2); // 1 trit carry flag
+	return self;
+)
+
+vm3o3__dispose(self)
+(
+	%p;
+	free(self.vm3o3.a);
+	free(self.vm3o3.b);
+	free(self.vm3o3.c);
+	free(self.vm3o3.pc);
+	free(self.vm3o3.sel);
+	p = self.vm3o3.pages;
+	free(p[0]);
+	free(p[1]);
+	free(p[2]);
+	free(p[3]);
+	free(p[4]);
+	free(p[5]);
+	free(p);
+	free(self.vm3o3.flag);
+	free(self);
+	return 0;
+)
+
+// binary to 2 trit
+// r: pointer to ternary output 
+// n: binary input
+set(r, n) 
+(
+	poke(r,0,0);
+	poke(r,1,0);
+	poke(r,2,0);
+	poke(r,3,0);
+
+	switch(n) (
+	-4:(poke(r,1,1); poke(r,3,1);),	
+	-3:(poke(r,3,1);),	
+	-2:(poke(r,0,1); poke(r,3,1);),	
+
+	-1:(poke(r,1,1);),	
+	 0:(;),	
+	+1:(poke(r,0,1);),	
+
+	+2:(poke(r,1,1); poke(r,2,1);),	
+	+3:(poke(r,2,1);),	
+	+4:(poke(r,0,1); poke(r,2,1);)	
+	);
+)
+
+// 2 trit to binary
+get(n)
+(
+	%r;
+	r = 0;
+	switch(peek(n,0)) (
+	1: ( r = r + 1;
+	));
+	switch(peek(n,1)) (
+	1: ( r = r - 1;
+	));
+	switch(peek(n,2)) (
+	1: ( r = r + 3;
+	));
+	switch(peek(n,3)) (
+	1: ( r = r - 3;
+	));
+	return r;	
+)
+
+// write the current page to the program counter
+vm3o3__write_to_pc(self)
+(
+	%b,i,r,p,pc;
+	p = self.vm3o3.pages;
+	pc = self.vm3o3.pc;
+	b = get(self.vm3o3.sel) + 4;
+	r = p[b];
+	i = 0;
+	// byte to byte copy
+	while (i < 32) (
+		poke(pc,i,peek(r,i));
+		i = i + 1;
+	);
+)
+
+// High level operations
+vm3o3__high_op(self)
+(
+	%op;
+	op = get(self.vm3o3.a); // opration select by a
+	switch(op) (
+	-4: (),
+	-3: (),
+	-2: (),
+	-1: (),
+	 0: (vm3o3__write_to_pc(self)),
+	+1: (),
+	+2: (),
+	+3: (),
+	+4: ()
+	);
+)
+
+// store 'a' register to page memory
+vm3o3__st(self, cell)
+(
+	%p,r,i,b;
+	
+	b = get(self.vm3o3.sel) + 4;
+	switch(cell) (
+	+4: (
+		// we have only 8 2 trit cells per page
+		// the 9's is trigering high level operations
+		return vm3o3__high_op(self);
+	));
+	p = self.vm3o3.pages;
+	r = self.vm3o3.a;
+	i = (cell + 4) * 4;
+	poke(p[b],i,peek(r,0));
+	poke(p[b],i+1,peek(r,1));
+	poke(p[b],i+2,peek(r,2));
+	poke(p[b],i+3,peek(r,3));
+	return 0;
+)
+
+// load 'a' register from page memory
+vm3o3__ld(self, cell)
+(
+	%p,r,i,b;
+	p = self.vm3o3.pages;
+	r = self.vm3o3.a;
+	b = get(self.vm3o3.sel) + 4;
+	i = (cell + 4) * 4;
+	poke(r,0,peek(p[b],i));
+	poke(r,1,peek(p[b],i+1));
+	poke(r,2,peek(p[b],i+2));
+	poke(r,3,peek(p[b],i+3));
+	return 0;
+)
+
+//  load immediate to register
+vm3o3__ldi(self, r, i)
+(
+	%r1;
+	switch(r) (
+	-1: (r1 = self.vm3o3.b;),
+	 0: (r1 = self.vm3o3.a;),
+	+1: (r1 = self.vm3o3.c;)
+	);
+	set(r1, i);
+	return 0;
+)
+
+// return a pointer to the reister value
+vm3o3__reg(self, r)
+(
+	switch(r) (
+	-1: (return self.vm3o3.b;),
+	 0: (return self.vm3o3.a;),
+	+1: (return self.vm3o3.c;)
+	);
+	return 0;
+)
+
+
+vm3o3__getpc(self)
+(
+	%m,i,j,pc,n;
+
+	pc = self.vm3o3.pc;
+	m = 1; // 3^0
+	i = 0;
+	n = 0;
+	while (i < 16) (
+		j = i * 2;
+		switch(peek(pc,j)) (
+		1: (n = n + m;),
+		0:-1: (
+			switch(peek(pc,j+1)) (
+			1: (n = n - m;)
+			);
+		));
+		m = m * 3;
+		i = i + 1;
+	);
+	return n;
+)
+
+vm3o3__addpc(self, n)
+(
+	%m,i,h,j,pc;
+	n = n + vm3o3__getpc(self);
+	pc = self.vm3o3.pc;
+	m = 1; // 3^0
+	i = 1;
+	while (i <= 16) (
+		m = m * 3;
+		i = i + 1;
+	);
+	i = i - 1;
+	while (i > 0) (
+		i = i - 1;
+		m = m / 3;
+		h = m / 2;
+		j = i * 2;
+		switch(n > h) (
+		1:(
+			n = n - m;
+			poke(pc,j,1);
+		),
+		0:-1: (
+			poke(pc,j,0);
+			switch(n < -h) (
+			1:(
+				n = n + m;
+				poke(pc,j+1,1);
+			),
+			0:-1:(
+				poke(pc,j+1,0);
+			));
+		));
+	);
+)
+
+// r.dest = r.src1 + a 
+vm3o3__add(self, dest, src1)
+(
+	%f,r,d,s1,s2;
+	s2 = get(self.vm3o3.a);
+	f = self.vm3o3.flag;
+	poke(f,0,0);
+	poke(f,1,0);
+	s1 = get(vm3o3__reg(self,src1));
+	d = vm3o3__reg(self,dest);
+	poke(d,0,0);
+	poke(d,1,0);
+	poke(d,2,0);
+	poke(d,3,0);
+	r = s1 + s2;
+
+	switch(r > 4) (
+	1:(
+		r = r - 9;
+		poke(f,0,1);
+	),
+	0:-1: (
+		switch(r < -4) (
+		1:(
+			r = r + 9;
+			poke(f,1,1);
+		));
+	));
+
+	switch(r > 1) (
+	1:(
+		r = r - 3;
+		poke(d,2,1);
+	),
+	0:-1: (
+		switch(r < -1) (
+		1:(
+			r = r + 3;
+			poke(d,3,1);
+		));
+	));
+	switch(r > 0) (
+	1:(
+		r = r - 1;
+		poke(d,0,1);
+	),
+	0:-1: (
+		switch(r < 0) (
+		1:(
+			r = r + 1;
+			poke(d,1,1);
+		));
+	));
+
+)
+
+// swap a and r
+vm3o3__swp(self,r1)
+(
+	%r,o,v,i;
+	r = vm3o3__reg(self, r1);
+	v = self.vm3o3.a;
+	i = 0;
+	while (i < 4) (
+		o = peek(r,i);
+		poke(r,i,peek(v,i));
+		poke(v,i,o);
+		i = 1 + 1;
+	);
+)
+
+
+// a = -a
+vm3o3__neg(self)
+(
+	%f,o,v;
+	f = self.vm3o3.flag;
+	v = self.vm3o3.a;
+	o = peek(f,0);
+	poke(f,0,peek(f,1));
+	poke(f,1,o);
+	o = peek(v,0);
+	poke(v,0,peek(v,1));
+	poke(v,1,o);
+	o = peek(v,2);
+	poke(v,2,peek(v,3));
+	poke(v,3,o);
+)
+
+// a = a * 3
+vm3o3__mul(self)
+(
+	%v,f;
+	f = self.vm3o3.flag;
+	v = self.vm3o3.a;
+	poke(f,0,peek(v,2));
+	poke(f,1,peek(v,3));
+	
+	poke(v,2,peek(v,0));
+	poke(v,3,peek(v,1));
+	poke(v,0,0);
+	poke(v,1,0);
+)
+
+// a = a / 3
+vm3o3__div(self)
+(
+	%v,f;
+	f = self.vm3o3.flag;
+	v = self.vm3o3.a;
+	poke(f,0,peek(v,0));
+	poke(f,1,peek(v,1));
+	
+	poke(v,0,peek(v,2));
+	poke(v,1,peek(v,3));
+	poke(v,2,0);
+	poke(v,3,0);
+)
+
+// compare 2 registers
+vm3o3__cmp(self, ri1, ri2)
+(
+	%r1,r2;
+	%a,b,f;
+	switch (ri1 == ri2 && ri1 != 0) (
+	1:(
+		return vm3o3__swp(self, ri1);
+	));
+	r1 = vm3o3__reg(self, ri1);
+	r2 = vm3o3__reg(self, ri2);
+	a = get(r1);
+	b = get(r2);
+	f = self.vm3o3.flag;
+	poke(f,0,0);
+	poke(f,1,0);
+	switch(a > b) (
+	1: (poke(f,0,1);)
+	);
+	switch(a < b) (
+	1: (poke(f,1,1);)
+	);
+	return 0;
+)
+
+// branch
+// pc = pc - (pc % 9) - 4 + (offset9 * 9)
+// when ==  0 -> beq
+// when == -1 -> blt
+// when == +1 -> bgt
+vm3o3__b(self, when, offset9)
+(
+	%c,pc;
+	c = get(self.vm3o3.flag);
+	pc = self.vm3o3.pc;
+	switch(c == when) (
+	1:(
+		poke(pc,0,0); // set lower trits to -4
+		poke(pc,1,1);
+		poke(pc,2,0);
+		poke(pc,3,1);
+		vm3o3__addpc(self, offset9 * 9);
+	)
+	);
+	return 0;
+)
+
+vm3o3__beq(self, offset9)
+(
+	return vm3o3__b(self, 0, offset9);
+)
+
+vm3o3__blt(self, offset9)
+(
+	return vm3o3__b(self, -1, offset9);
+)
+
+vm3o3__bgt(self, offset9)
+(
+	return vm3o3__b(self, +1, offset9);
+)
+
+// set current registers page index
+vm3o3__sel(self, id)
+(
+	switch(id) (
+	+4:+3:+2: (return 0;) // we only have 6 pages
+	);
+	set(self.vm3o3.sel, id);
+	return 0;
+)
+
+// store current page to program counter
+vm3o3__stpc(self) 
+(
+	vm3o3__ldi(self, 0, 0);
+	vm3o3__st(self, +4); 
+)
+
+vm3o3__reset(self)
+(
+	// set sel (page selection) to 0 
+	vm3o3__sel(self, 0);
+
+	// set register a to 0
+	vm3o3__ldi(self, 0, 0);
+
+	// write 0 (using register a)  to page[0]	
+	vm3o3__st(self, -4); // -4  0
+	vm3o3__st(self, -3); //     2
+	vm3o3__st(self, -2); //     4
+	vm3o3__st(self, -1); //     6
+	vm3o3__st(self,  0); // 0   8
+	vm3o3__st(self, +1); //    10
+	vm3o3__st(self, +2); //    12
+	vm3o3__st(self, +3); //    14
+
+	// transfer page[0] value to program counter
+	vm3o3__stpc(self); 
+
+	// compare reg a to reg a to clear the carry flag
+	vm3o3__cmp(self, 0,0); 
+	return 0;
+)
+
+vm3o3__run(self)
+(
+	%i;
+	i = 10;
+	//vm3o3__cmp(self, 0, 0);
+
+	vm3o3__ldi(self, 0, -3); //
+	vm3o3__sel(self, 1);     //
+	vm3o3__st(self, -4);     // -4  0
+
+	vm3o3__sel(self, 0); // store page[0] to program counter
+	vm3o3__stpc(self);   //
+
+	while (i > 0) (
+		i = i - 1;
+		//vm3o3__beq(self, -1);
+		print2(vm3o3__getpc(self));
+		print("\n");
+		vm3o3__addpc(self, 1);
+	);
+)
+
+startup(argc, argv) 
+(
+	%vm;
+	print("3o3 ternary Virtual Machine\n");
+	vm = vm3o3__new();
+	vm3o3__reset(vm);
+	vm3o3__run(vm);
+	vm3o3__dispose(vm);
+	print("done.\n");
+	return 0;
+)
+
