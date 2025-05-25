@@ -1,6 +1,6 @@
 
 ! zeasm:   the programming language (reverse polish notation)
-! ! is comments (till the end of lien)
+! ! is comments (till the end of line)
 ! only digits, lower case letters and ,;:.?!"()'-
 ! 
 
@@ -10,15 +10,15 @@ include "std.zea"
 func hello value;
 
 
-! a global array of integer
-array ar 0,1,2,3,4,5,? ! ? skips blank characters and comments
+! a module array of integer
+data ar 0,1,2,3,4,5,? ! ? skips blank characters and comments
 	6,7,8,9,?
 	10,11,12;
 
-!  global arrays of bytes 
-bytes bar '-abcdefghijklmno'; 	! eight bytes
+!  module arrays of bytes 
+data bar '-abcdefghijklmno'; 	! eight bytes
 
-bytes str "abc";		! four bytes (strings are nul terminated)
+data str "abc";		! four bytes (strings are nul terminated)
 
 class myclass: 
 ! fields
@@ -30,33 +30,38 @@ wire logic; 	! for hardware desciption language
 ! methods
 func new:
 	sizeof myclass;
-	new bytes;
-	pop this;
+	new;
+	set this;
 
-	push 1024; 
-	new array; 
-	set this.arrr ans;
-	pop this.bptr;  ! now arrr and bptr point to the same memory
+	new 1024; 
+	store this.arrr;
+	load this.arrr;
+	store this.bptr;  ! now arrr and bptr point to the same memory
 
-	push this; ! we return the value on the compute stack
+	return this; ! we return the value on the compute stack
 end;
 
 func dispose:
-	push this.arrr;
+	load this.arrr;
 	delete;
-	push this;
+	get this;
 	delete;
+	return 0;
 end;
 
 ! recusive call while a is greater than zero
 func methoda a,b:
-	push a;
-	push 1;
-	sub;
-	if ans:gt(this.methoda ans,b);:;
-	! here the value of "a" is not valid since method or function calls
-	! with arguments overwrite the memory allacates for arguments.
-	pop;
+	var aa;
+
+	sub a 1; ! add sub mul div rem
+
+	set aa;
+	gt aa 0; ! eq ne lt gt le ge
+	if true (
+		this.method aa b;
+		return;
+	);
+	return 0;
 end;
 
 end class; ! end of class myclass
@@ -68,88 +73,74 @@ func main argc,argv:
 
 	obj.new;	! instantiate an object (this pointer is null) and push
 			! it to the stack
-	pop obj; 	! get it and assign it
+	set obj; 	! get it and assign it
 
-	set bs obj.bptr;
-	set bs(0) 21; ! set byte zero of obj.bptr to twenty-one
+	load obj.bptr
+	set bs;
+	store bs(0) 21; ! set byte zero of obj.bptr to twenty-one
 
 	obj.methoda 15, -3; ! call method
-	set obj.avalue 1;
-	obj.dispose;	
+	drop;
+	store obj.avalue 1;
+	drop obj.dispose;	
 
 	! invert bit zero of argc
-	getb tmp argc 0;
-	if tmp: 
-		eq(setb argc 0);
-		ne(clrb argc 0);
-	:;
+	getb argc 0;
+	if true (
+		clrb argc 0;
+	) else (
+		setb argc 0;
+	);
 
 	!invert trit two of argc
-	gett tmp argc 2
-	if tmp:
-		lt(post argc 2);
-		eq(clrt argc 2);
-		gt(negt argc 2);
-	:;
+	gett argc 2;
+	if true (
+		minust argc 2;
+	} false (
+		plust argc 2;
+	) else (
+		! zerot argc 2;
+	);
 
-	push argc;
-	push 1;
-	sub;
-
-	if ans:
-		gt ( 
-			println "too many arguments";
-			exit -1;
+	gt argc 1;
+	if true (
+		println "too many arguments";
+		exit -1;
+	) else (
+		eq argc 1;
+		if true (
+			println "hello world";
+		) else (
+			println "panic";
 		);
-		eq (println "hello world");
-		lt (println "panic");
-		ne (
-			print "argc value is: ";
-			printv argc;
-			println;
-		);
-		ge (println "greater or equal");
-		le (
-			println "less or equal";
-		);
-	:; ! end of if
+	);
 
 	! numerical constants
 	set tmp 9000000000000;
-	pop tmp;
-	set tmp 2;
-	push tmp;
-	push ans;
-	mul;
+	mul 3 tmp;
+	drop;
 
 	set tmp "a string";
 	print "program name equals ";
 	println argv(0); ! array access
 	println tmp;
 
-	push 4;
-	div;
-	push 5;
-	add;
-	push 5;
-	mod;
-	push 1;
-	sub;
-	pop;
-
-	push tmp;
-	loop:
-		push 1;
-		sub;
-		if ans: 		! ans is the top of the stack
-			eq(break);
-			gt(continue);
-		:;
-		printv ans;
+	get tmp;
+	loop (
+		sub tmp 1;
+		set tmp;
+		gt tmp 0;
+		if true (
+			continue;
+		) else (
+			break;
+		);
+		printv tmp;
 		println;
-	:;
+	);
 
 	hello tmp; 
+	drop;
 
 	print '-m-j--';	! byte string. - is zero, a is one 
 			! binary : - abcde fghij klmno 
@@ -161,6 +152,7 @@ func main argc,argv:
 	set tmp '--';
 	
 	exit 0;
+	return 0;
 end;
 
 ! function definition
@@ -168,6 +160,7 @@ func hello value:
 	println "the value of value is ";
 	printv value;
 	println;
+	return 0;
 end;
 
 
