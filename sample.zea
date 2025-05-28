@@ -6,10 +6,6 @@
 
 include "std.zea"
 
-! function declaration
-func hello value;
-
-
 ! a module array of integer
 data ar 0,1,2,3,4,5,? ! ? skips blank characters and comments
 	6,7,8,9,?
@@ -19,6 +15,8 @@ data ar 0,1,2,3,4,5,? ! ? skips blank characters and comments
 data bar '-abcdefghijklmno'; 	! eight bytes
 
 data str "abc";		! four bytes (strings are nul terminated)
+
+func hello;
 
 class myclass: 
 ! fields
@@ -58,7 +56,7 @@ func methoda a,b:
 	set aa;
 	gt aa 0; ! eq ne lt gt le ge
 	if true (
-		this.method aa b;
+		this.methoda aa b;
 		return;
 	);
 	return 0;
@@ -66,20 +64,25 @@ end;
 
 end class; ! end of class myclass
 
-func main argc,argv:
-	var tmp;	! a local variable (integer or pointer to array)
+func entry argc,argv:
+	var tmp;	! a local variable (integer or pointer to data)
 	class myclass obj;	! a pointer to object of type "myclass"
-	bytes bs;		! a pointer to byte
+	var bs;		
 
 	obj.new;	! instantiate an object (this pointer is null) and push
 			! it to the stack
 	set obj; 	! get it and assign it
 
-	load obj.bptr
+	load obj.bptr;
 	set bs;
-	store bs(0) 21; ! set byte zero of obj.bptr to twenty-one
+	add bs 3;
+	set bs;
+	storeb bs 21; ! set byte three of obj.bptr to twenty-one
 
-	obj.methoda 15, -3; ! call method
+	loadb bs;
+	set tmp;	      ! tmp equals  21
+
+	obj.methoda 15 -3; ! call method
 	drop;
 	store obj.avalue 1;
 	drop obj.dispose;	
@@ -88,7 +91,7 @@ func main argc,argv:
 	getb argc 0;
 	if true (
 		clrb argc 0;
-	) else (
+	) false (
 		setb argc 0;
 	);
 
@@ -96,9 +99,9 @@ func main argc,argv:
 	gett argc 2;
 	if true (
 		minust argc 2;
-	} false (
+	) false (
 		plust argc 2;
-	) else (
+	) zero (
 		! zerot argc 2;
 	);
 
@@ -116,14 +119,25 @@ func main argc,argv:
 	);
 
 	! numerical constants
-	set tmp 9000000000000;
-	mul 3 tmp;
-	drop;
+	drop mul 3 1000000000;
+	! this is equivalent
+	const 1000000000;
+	const 3;
+	mul;	
+	drop; ! throw away the result of the multiplication
+
 
 	set tmp "a string";
 	print "program name equals ";
-	println argv(0); ! array access
 	println tmp;
+	! array access
+	varadd argv 0; 
+	set tmp;
+	load tmp;
+	println;
+	print "arg1: ";
+	varadd argv 1; ! result is argv plus four
+	println; 
 
 	get tmp;
 	loop (
@@ -136,7 +150,7 @@ func main argc,argv:
 			break;
 		);
 		printv tmp;
-		println;
+		println "";
 	);
 
 	hello tmp; 
@@ -159,7 +173,7 @@ end;
 func hello value:
 	println "the value of value is ";
 	printv value;
-	println;
+	println "";
 	return 0;
 end;
 
