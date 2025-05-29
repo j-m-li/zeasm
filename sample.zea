@@ -16,7 +16,7 @@ data bar '-abcdefghijklmno'; 	! eight bytes
 
 data str "abc";		! four bytes (strings are nul terminated)
 
-func hello;
+func: hello value,data;
 
 class myclass: 
 ! fields
@@ -26,6 +26,7 @@ var bptr;
 wire logic; 	! for hardware desciption language
 
 ! methods
+func: dispose;
 func new:
 	sizeof myclass;
 	new;
@@ -81,11 +82,27 @@ func entry argc,argv:
 
 	loadb bs;
 	set tmp;	      ! tmp equals  21
+	printv tmp;
+	println " equals 21 ?";
 
 	obj.methoda 15 -3; ! call method
 	drop;
 	store obj.avalue 1;
 	drop obj.dispose;	
+
+	gt argc 1;
+	if true (
+		println "too many arguments";
+	) false (
+		eq argc 1;
+		if true (
+			println "hello world";
+		) false (
+			println "panic";
+			exit -1;
+		);
+	);
+
 
 	! invert bit zero of argc
 	getb argc 0;
@@ -105,26 +122,22 @@ func entry argc,argv:
 		! zerot argc 2;
 	);
 
-	gt argc 1;
-	if true (
-		println "too many arguments";
-		exit -1;
-	) else (
-		eq argc 1;
-		if true (
-			println "hello world";
-		) else (
-			println "panic";
-		);
-	);
 
 	! numerical constants
 	drop mul 3 1000000000;
 	! this is equivalent
-	const 1000000000;
+	1000000000; ! const is optional
 	const 3;
 	mul;	
 	drop; ! throw away the result of the multiplication
+
+	1000000000;
+	3;
+	mul;
+	print "3 x 10000.. equals ";
+	printv;
+	println "";
+
 
 
 	set tmp "a string";
@@ -132,28 +145,32 @@ func entry argc,argv:
 	println tmp;
 	! array access
 	varadd argv 0; 
-	set tmp;
-	load tmp;
+	load;
 	println;
-	print "arg1: ";
-	varadd argv 1; ! result is argv plus four
-	println; 
+	gt argc 1;
+	if true (
+		print "arg1: ";
+		varadd argv 1; ! result is argv plus four
+		load;
+		println; 
+	);
 
-	get tmp;
+	set tmp 4;
 	loop (
 		sub tmp 1;
 		set tmp;
 		gt tmp 0;
 		if true (
 			continue;
-		) else (
+		) false (
 			break;
 		);
 		printv tmp;
 		println "";
 	);
 
-	hello tmp; 
+	set tmp 12345;
+	hello tmp " yo"; 
 	drop;
 
 	print '-m-j--';	! byte string. - is zero, a is one 
@@ -162,7 +179,10 @@ func entry argc,argv:
 		   	! we print  carriage return and new line characters
 			! balanced ternary : zyx wvuts rqpon - abcde fghij klm
 
-	set tmp "hello";
+	set tmp " world";
+	"hello";
+	print;
+	println tmp;
 	set tmp '--';
 	
 	exit 0;
@@ -170,10 +190,10 @@ func entry argc,argv:
 end;
 
 ! function definition
-func hello value:
+func hello value,data:
 	println "the value of value is ";
 	printv value;
-	println "";
+	println data;
 	return 0;
 end;
 
