@@ -216,7 +216,7 @@ func entry argc,argv:
 		flush;	
 	);
 	
-	! print the last 500 character of the file
+	! skip the first 500 character of the file
 	500;
 	fi.size "file.h";
 	sub;
