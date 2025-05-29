@@ -78,7 +78,7 @@ func entry argc,argv:
 	set bs;
 	add bs 3;
 	set bs;
-	storeb bs 21; ! set byte three of obj.bptr to twenty-one
+	storeb bs 533; ! 512 plus 21, set byte three of obj.bptr to twenty-one
 
 	loadb bs;
 	set tmp;	      ! tmp equals  21
