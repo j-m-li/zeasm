@@ -93,8 +93,7 @@ var term__init_(var a) {
 	fdwMode = fdwSaveOldMode;
 	fdwMode |= /*ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT |
 		      ENABLE_EXTENDED_FLAGS     | ENABLE_PROCESSED_INPUT |*/
-		   ENABLE_VIRTUAL_TERMINAL_PROCESSING |
-		   ENABLE_VIRTUAL_TERMINAL_INPUT;
+	    ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_VIRTUAL_TERMINAL_INPUT;
 	if (!SetConsoleMode(hStdin, fdwMode))
 		ErrorExit("SetConsoleMode");
 	/*
