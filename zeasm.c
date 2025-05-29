@@ -184,7 +184,7 @@ var hex(var n) {
 	return -1;
 }
 
-var byte_string(byte *buf) {
+var byte_string(byte *buf, var offset) {
 	var i;
 	var l = 0;
 	var c;
@@ -194,7 +194,7 @@ var byte_string(byte *buf) {
 		return 0;
 	}
 	next();
-	i = 0;
+	i = offset;
 	while (i < (MAX_SIZE - 8) && ahead != EOF) {
 		if (ahead == '\'') {
 			buf[i] = 0;
@@ -231,7 +231,7 @@ var byte_string(byte *buf) {
 	return 0;
 }
 
-var string(byte *buf) {
+var string(byte *buf, var offset) {
 	var i;
 	var c;
 	if (ahead != '"') {
@@ -239,7 +239,7 @@ var string(byte *buf) {
 		return 0;
 	}
 	next();
-	i = 0;
+	i = offset;
 	while (i < MAX_SIZE && (c = next()) != EOF) {
 		if (c == '"') {
 			buf[i] = 0;
@@ -284,7 +284,7 @@ var number() {
 var include() {
 	byte *s;
 	spaces();
-	s = (byte *)string(value);
+	s = (byte *)string(value, 0);
 	printf("#include \"%s.h\"\n", s);
 	return 0;
 }
@@ -723,12 +723,19 @@ var args() {
 			id2 = malloc(MAX_ID_LEN);
 			identifier(id2);
 		}
-	} else if (ahead == '"') {
+	} else if (ahead == '"' || ahead == '\'') {
+		var o;
 		s = malloc(MAX_SIZE);
-		string(s);
-	} else if (ahead == '\'') {
-		s = malloc(MAX_SIZE);
-		byte_string(s);
+		s[0] = 0;
+		while (ahead == '"' || ahead == '\'') {
+			o = strlen(s);
+			if (ahead == '"') {
+				string(s, o);
+			} else {
+				byte_string(s, o);
+			}
+			spaces();
+		}
 	} else if (ahead == '-') {
 		n = number();
 	} else if (ahead >= '0' && ahead <= '9') {
@@ -925,75 +932,69 @@ var data() {
 	spaces();
 	s = (byte *)identifier(var_name);
 	spaces();
-	if (ahead == '"') {
-		printf("byte *%s = (byte*)\"", s);
-		while (ahead == '"') {
+	printf("const byte %s[] = \"", s);
+	while (ahead == '"'|| ahead == '\'') {
+		if (ahead == '"') {
 			next();
 			while ((c = next()) != EOF) {
 				if (c == '"') {
+					spaces();
+					if (ahead != '"' && ahead != '\'') {
+						printf("\\x00");
+						size++;
+					}
 					break;
 				}
 				printf("%c", c);
 				size++;
 			}
 			spaces();
-		}
-		if (ahead != ';') {
-			error("miss ;");
-		}
-		size++;
-		next();
-		printf("\"; /* size : %d */\n", size);
-		return 0;
-	}
-	if (ahead == '\'') {
-		printf("byte %s[] = \"", s);
-		while (ahead != EOF && ahead != ';') {
-			while (ahead == '\'') {
-				next();
-				while ((c = next()) != EOF) {
-					if (c == '\'') {
-						break;
-					}
-					printf("\\x%02x", c);
-					size++;
+		} else {
+			next();
+			while ((c = next()) != EOF && ahead != EOF) {
+				if (c == '\'') {
+					break;
 				}
-				spaces();
-			}
-			if (ahead != ';') {
-				error("miss ;");
+				printf("\\x");
+				if (c == '-') {
+					printf("0");
+				} else {
+					printf("%1X",  c - 'a' + 1);
+				}
+				c = next();
+				if (c == '\'') {
+					break;
+				}
+				if (c == '-') {
+					printf("0");
+				} else {
+					printf("%1X",  c - 'a' + 1);
+				}
+				size++;
 			}
 			spaces();
 		}
-		if (ahead == ';') {
-			printf("\"; /* size : %d */\n", size);
-			next();
-			return 0;
-		} else {
-			error("missing ;");
-		}
 	}
 
-	printf("byte %s[] = {", s);
 	while (ahead != EOF && ahead != ';') {
 		v = number();
 		spaces();
-		printf("0x%x, ", v & 0xFF);
-		printf("0x%x, ", (v >> 8) & 0xFF);
-		printf("0x%x, ", (v >> 16) & 0xFF);
+		printf("\\x%02x", v & 0xFF);
+		printf("\\x%02x", (v >> 8) & 0xFF);
+		printf("\\x%02x", (v >> 16) & 0xFF);
 		if (ahead == ',') {
-			printf("0x%x, ", (v >> 24) & 0xFF);
+			printf("\\x%02x", (v >> 24) & 0xFF);
 			size += 4;
 			next();
 			spaces();
 		} else {
-			printf("0x%x", (v >> 24) & 0xFF);
+			printf("\\x%02x", (v >> 24) & 0xFF);
 			size += 4;
 			break;
 		}
 	}
 	if (ahead == ';') {
-		printf("}; /* size : %d */\n", size);
+		printf("\"; /* size : %d */\n", size);
 		next();
 		return 0;
 	} else {

@@ -223,7 +223,7 @@ func entry argc,argv:
 	fi.load "file.h" 500;
 	print;
 
-	println "done!";
+	print "done!" '-j' "!" '-j';
 	flush;	
 	t.dispose;
 	exit -1;
