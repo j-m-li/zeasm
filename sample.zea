@@ -2,7 +2,8 @@
 ! zeasm:   the programming language (reverse polish notation)
 ! ! is comments (till the end of line)
 ! only digits, lower case letters and ,;:.?!"()'-
-! 
+!
+! builtin function can return void, but regular functions always return a val 
 
 include "std.zea"
 
@@ -66,9 +67,11 @@ end;
 end class; ! end of class myclass
 
 func entry argc,argv:
+	class term t;
 	var tmp;	! a local variable (integer or pointer to data)
 	class myclass obj;	! a pointer to object of type "myclass"
 	var bs;		
+	class file fi;
 
 	obj.new;	! instantiate an object (this pointer is null) and push
 			! it to the stack
@@ -184,8 +187,46 @@ func entry argc,argv:
 	print;
 	println tmp;
 	set tmp '--';
+
+	set t 0;
+	t.new;
+	set t;
+	loop (
+		t.wait 10;
+		le 0; ! zero is less or equal t.wait return value
+		if true (
+			load t.evttype; 
+			if 1 (                       ! keyboard event
+				const 0;
+				load t.evtlength;
+				gt;
+				if true (
+					load t.evtdata;
+					load;
+					if 27 ( ! Escape key
+						break;
+					);
+					load t.evtdata;
+					print;
+				);	
+			);
+		) default (
+			!print "no event";
+		);
+		flush;	
+	);
 	
-	exit 0;
+	! print the last 500 character of the file
+	500;
+	fi.size "file.h";
+	sub;
+	fi.load "file.h" 500;
+	print;
+
+	println "done!";
+	flush;	
+	t.dispose;
+	exit -1;
 	return 0;
 end;
 

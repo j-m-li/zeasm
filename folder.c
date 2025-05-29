@@ -1,9 +1,9 @@
 /*
 
-          21 August MMXXIV PUBLIC DOMAIN by JML
+	  21 August MMXXIV PUBLIC DOMAIN by JML
 
      The authors and contributors disclaim copyright, patents
-           and all related rights to this software.
+	   and all related rights to this software.
 
  Anyone is free to copy, modify, publish, use, compile, sell, or
  distribute this software, either in source code form or as a
@@ -33,229 +33,202 @@
 
 /****************************************************************************/
 #if defined(_MSC_VER)
-#include <windows.h>
-#include <stdio.h>
 #include <malloc.h>
+#include <stdio.h>
 #include <string.h>
+#include <windows.h>
 
-struct _folder
-{
-    char fldrname[MAX_PATH + 4];
-    size_t namelen;
-    HANDLE hFind;
-    WIN32_FIND_DATAA ffd;
-    BOOL state;
+struct _folder {
+	char fldrname[MAX_PATH + 4];
+	size_t namelen;
+	HANDLE hFind;
+	WIN32_FIND_DATAA ffd;
+	BOOL state;
 };
 
-FOLDER *openfldr(const char *fldrname)
-{
-    FOLDER *ffd;
-    size_t l = 0;
-    char buf[MAX_PATH];
+FOLDER *openfldr(const char *fldrname) {
+	FOLDER *ffd;
+	size_t l = 0;
+	char buf[MAX_PATH];
 
-    if (!fldrname)
-    {
-        return NULL;
-    }
-    if (strlen(fldrname) > (MAX_PATH - 3))
-    {
-        return NULL;
-    }
-    ffd = malloc(sizeof(*ffd));
-    if (!ffd)
-    {
-        return NULL;
-    }
-    snprintf(buf, MAX_PATH, "%s\\*", fldrname);
-    ffd->hFind = FindFirstFileA(buf, &(ffd->ffd));
-    if (ffd->hFind == INVALID_HANDLE_VALUE)
-    {
-        free(ffd);
-        return NULL;
-    }
-    ffd->namelen = strlen(fldrname);
-    memcpy(ffd->fldrname, fldrname, ffd->namelen);
-    ffd->fldrname[ffd->namelen] = '/';
-    ffd->namelen++;
-    ffd->fldrname[ffd->namelen] = '\0';
-    ffd->state = TRUE;
-    return ffd;
+	if (!fldrname) {
+		return NULL;
+	}
+	if (strlen(fldrname) > (MAX_PATH - 3)) {
+		return NULL;
+	}
+	ffd = malloc(sizeof(*ffd));
+	if (!ffd) {
+		return NULL;
+	}
+	snprintf(buf, MAX_PATH, "%s\\*", fldrname);
+	ffd->hFind = FindFirstFileA(buf, &(ffd->ffd));
+	if (ffd->hFind == INVALID_HANDLE_VALUE) {
+		free(ffd);
+		return NULL;
+	}
+	ffd->namelen = strlen(fldrname);
+	memcpy(ffd->fldrname, fldrname, ffd->namelen);
+	ffd->fldrname[ffd->namelen] = '/';
+	ffd->namelen++;
+	ffd->fldrname[ffd->namelen] = '\0';
+	ffd->state = TRUE;
+	return ffd;
 }
 
-char *readfldr(FOLDER *ffd)
-{
-    size_t l;
+char *readfldr(FOLDER *ffd) {
+	size_t l;
 
-    while (ffd->state && (!strcmp(ffd->ffd.cFileName, ".") || !strcmp(ffd->ffd.cFileName, "..")))
-    {
-        ffd->state = FindNextFileA(ffd->hFind, &(ffd->ffd));
-    }
-    if (!ffd->state)
-    {
-        return NULL;
-    }
-    l = strlen(ffd->ffd.cFileName);
-    if (l + ffd->namelen >= sizeof(ffd->fldrname) - 2)
-    {
-        return NULL;
-    }
-    memcpy(ffd->fldrname + ffd->namelen, ffd->ffd.cFileName, l);
-    ffd->fldrname[ffd->namelen + l] = '\0';
+	while (ffd->state && (!strcmp(ffd->ffd.cFileName, ".") ||
+			      !strcmp(ffd->ffd.cFileName, ".."))) {
+		ffd->state = FindNextFileA(ffd->hFind, &(ffd->ffd));
+	}
+	if (!ffd->state) {
+		return NULL;
+	}
+	l = strlen(ffd->ffd.cFileName);
+	if (l + ffd->namelen >= sizeof(ffd->fldrname) - 2) {
+		return NULL;
+	}
+	memcpy(ffd->fldrname + ffd->namelen, ffd->ffd.cFileName, l);
+	ffd->fldrname[ffd->namelen + l] = '\0';
 
-    if (ffd->ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-        ffd->fldrname[ffd->namelen + l] = '/';
-        ffd->fldrname[ffd->namelen + l + 1] = '\0';
-    }
-    ffd->state = FindNextFileA(ffd->hFind, &(ffd->ffd));
-    return ffd->fldrname + ffd->namelen;
+	if (ffd->ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		ffd->fldrname[ffd->namelen + l] = '/';
+		ffd->fldrname[ffd->namelen + l + 1] = '\0';
+	}
+	ffd->state = FindNextFileA(ffd->hFind, &(ffd->ffd));
+	return ffd->fldrname + ffd->namelen;
 }
 
-int closefldr(FOLDER *ffd)
-{
-    int r = 0;
-    DWORD dwError;
+int closefldr(FOLDER *ffd) {
+	int r = 0;
+	DWORD dwError;
 
-    dwError = GetLastError();
-    if (dwError != ERROR_NO_MORE_FILES)
-    {
-        r = -1;
-    }
-    FindClose(ffd->hFind);
-    free(ffd);
-    return r;
+	dwError = GetLastError();
+	if (dwError != ERROR_NO_MORE_FILES) {
+		r = -1;
+	}
+	FindClose(ffd->hFind);
+	free(ffd);
+	return r;
 }
 
 #else /* defined(_MSC_VER) */
 /****************************************************************************/
-#include <stdio.h>
 #include <dirent.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #ifndef FILENAME_MAX
 #define FILENAME_MAX 4096
 #endif
 
-struct _folder
-{
-    char fldrname[FILENAME_MAX + 4];
-    size_t namelen;
-    DIR *dfd;
+struct _folder {
+	char fldrname[FILENAME_MAX + 4];
+	size_t namelen;
+	DIR *dfd;
 };
 
-FOLDER *openfldr(const char *fldrname)
-{
-    FOLDER *ffd;
+FOLDER *openfldr(const char *fldrname) {
+	FOLDER *ffd;
 
-    if (!fldrname)
-    {
-        return NULL;
-    }
-    ffd = malloc(sizeof(*ffd));
-    if (!ffd)
-        return NULL;
-    ffd->dfd = opendir(fldrname);
-    if (!ffd->dfd)
-    {
-        free(ffd);
-        return NULL;
-    }
-    ffd->namelen = strlen(fldrname);
-    memcpy(ffd->fldrname, fldrname, ffd->namelen);
-    ffd->fldrname[ffd->namelen] = '/';
-    ffd->namelen++;
-    ffd->fldrname[ffd->namelen] = '\0';
-    return ffd;
+	if (!fldrname) {
+		return NULL;
+	}
+	ffd = malloc(sizeof(*ffd));
+	if (!ffd)
+		return NULL;
+	ffd->dfd = opendir(fldrname);
+	if (!ffd->dfd) {
+		free(ffd);
+		return NULL;
+	}
+	ffd->namelen = strlen(fldrname);
+	memcpy(ffd->fldrname, fldrname, ffd->namelen);
+	ffd->fldrname[ffd->namelen] = '/';
+	ffd->namelen++;
+	ffd->fldrname[ffd->namelen] = '\0';
+	return ffd;
 }
 
-char *readfldr(FOLDER *ffd)
-{
-    struct dirent *d;
-    size_t l;
-    struct stat sb;
-    do
-    {
-        d = readdir(ffd->dfd);
-    } while (d && (!strcmp(d->d_name, ".") || !strcmp(d->d_name, "..")));
-    if (!d)
-    {
-        return NULL;
-    }
-    l = strlen(d->d_name);
-    if (l + ffd->namelen >= sizeof(ffd->fldrname) - 2)
-    {
-        return NULL;
-    }
-    memcpy(ffd->fldrname + ffd->namelen, d->d_name, l);
-    ffd->fldrname[ffd->namelen + l] = '\0';
+char *readfldr(FOLDER *ffd) {
+	struct dirent *d;
+	size_t l;
+	struct stat sb;
+	do {
+		d = readdir(ffd->dfd);
+	} while (d && (!strcmp(d->d_name, ".") || !strcmp(d->d_name, "..")));
+	if (!d) {
+		return NULL;
+	}
+	l = strlen(d->d_name);
+	if (l + ffd->namelen >= sizeof(ffd->fldrname) - 2) {
+		return NULL;
+	}
+	memcpy(ffd->fldrname + ffd->namelen, d->d_name, l);
+	ffd->fldrname[ffd->namelen + l] = '\0';
 
-    if (stat(ffd->fldrname, &sb) == -1)
-    {
-        return NULL;
-    }
-    if (S_ISDIR(sb.st_mode))
-    {
-        ffd->fldrname[ffd->namelen + l] = '/';
-        ffd->fldrname[ffd->namelen + l + 1] = '\0';
-    }
-    return ffd->fldrname + ffd->namelen;
+	if (stat(ffd->fldrname, &sb) == -1) {
+		return NULL;
+	}
+	if (S_ISDIR(sb.st_mode)) {
+		ffd->fldrname[ffd->namelen + l] = '/';
+		ffd->fldrname[ffd->namelen + l + 1] = '\0';
+	}
+	return ffd->fldrname + ffd->namelen;
 }
 
-int closefldr(FOLDER *ffd)
-{
-    int r;
-    r = closedir(ffd->dfd);
-    free(ffd);
-    return r;
+int closefldr(FOLDER *ffd) {
+	int r;
+	r = closedir(ffd->dfd);
+	free(ffd);
+	return r;
 }
 
 /****************************************************************************/
 #endif /* !defined(_MSC_VER)*/
 /****************************************************************************/
 
-int mkfldr(const char *path)
-{
-    char temp[FILENAME_MAX];
-    char *b;
-    char c;
-    int r = 0;
-    size_t l;
-    l = strlen(path);
-    if (l >= sizeof(temp) -1) {
-        return -1;
-    }
-    memcpy(temp, path, l + 1);
-    b = temp;
-    while (*b)
-    {
-        b++;
-        while (*b && *b != '/' && *b != '\\')
-        {
-            b++;
-        }
-        c = *b;
-        *b = '\0';
+int mkfldr(const char *path) {
+	char temp[FILENAME_MAX];
+	char *b;
+	char c;
+	int r = 0;
+	size_t l;
+	l = strlen(path);
+	if (l >= sizeof(temp) - 1) {
+		return -1;
+	}
+	memcpy(temp, path, l + 1);
+	b = temp;
+	while (*b) {
+		b++;
+		while (*b && *b != '/' && *b != '\\') {
+			b++;
+		}
+		c = *b;
+		*b = '\0';
 #if defined(__MINGW32__)
-        r = mkdir(temp);
+		r = mkdir(temp);
 #elif defined(_MSC_VER)
-        r = _mkdir(temp);
+		r = _mkdir(temp);
 #else
-        r = mkdir(temp, 511);
+		r = mkdir(temp, 511);
 #endif
-        *b = c;
-    }
-    return r;
+		*b = c;
+	}
+	return r;
 }
 
-int rmfldr(const char *path)
-{
+int rmfldr(const char *path) {
 #if defined(_MSC_VER)
-    return _rmdir(path);
+	return _rmdir(path);
 #else
-    return rmdir(path);
+	return rmdir(path);
 #endif
 }

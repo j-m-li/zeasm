@@ -1,12 +1,12 @@
 /*
-                 ZeASM programing language
- 
+		 ZeASM programing language
+
  As sun, earth, water & wind, this work is neither ours nor yours.
 
-              MMXXV May 16 PUBLIC DOMAIN by JML
+	      MMXXV May 29 PUBLIC DOMAIN by JML
 
-    The authors and contributors disclaim copyright, patents 
-           and all related rights to this software.
+    The authors and contributors disclaim copyright, patents
+	   and all related rights to this software.
 
  Anyone is free to copy, modify, publish, use, compile, sell, or
  distribute this software, either in source code form or as a
@@ -32,17 +32,17 @@
 */
 /*
  Must run on a CH32x035G8R6 $0.40
- (32bit RISC-V, 62kB Flash, 20kB SRAM, USB host/device, 48MHz) 
+ (32bit RISC-V, 62kB Flash, 20kB SRAM, USB host/device, 48MHz)
 
  id = ((class & 0xFF) << 24) | \
- 	((size & 0xFF) << 16) | \
- 	(label & 0xFFFF);
+	((size & 0xFF) << 16) | \
+	(label & 0xFFFF);
  local variables and function parameters are static.
 */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #define byte unsigned char
 #define var long
@@ -53,10 +53,10 @@
 #define MAX_LABEL 65535
 #define SIZE_OF_VAR sizeof(var)
 
-byte class_name[MAX_ID_LEN+1];
-byte func_name[MAX_ID_LEN+1];
-byte var_name[MAX_ID_LEN+1];
-byte value[MAX_SIZE+1];
+byte class_name[MAX_ID_LEN + 1];
+byte func_name[MAX_ID_LEN + 1];
+byte var_name[MAX_ID_LEN + 1];
+byte value[MAX_SIZE + 1];
 byte input[512];
 var ahead = 0;
 byte tmp[MAX_ID_LEN + 1];
@@ -66,32 +66,27 @@ var line;
 var nb_methods;
 var nb_ref;
 
-
 var comment();
 var keyword();
 var args();
 
-var next()
-{
+var next() {
 	var t = ahead;
 	ahead = getchar();
 	return t;
 }
 
-var error(byte *str)
-{
-	printf("#error at line %d (%c)  %s\n", line, ahead,  str);
+var error(byte *str) {
+	printf("#error at line %d (%c)  %s\n", line, ahead, str);
 	fflush(stdout);
 	exit(-1);
 }
 
-var identifier(byte *buf)
-{
+var identifier(byte *buf) {
 	var i = 0;
 	while (i < MAX_ID_LEN && ahead != EOF) {
-		if ((ahead >= 'a' && ahead <= 'z') || 
-				(ahead >= '0' && ahead <= '9')) 
-		{
+		if ((ahead >= 'a' && ahead <= 'z') ||
+		    (ahead >= '0' && ahead <= '9')) {
 			buf[i] = ahead;
 			i++;
 		} else {
@@ -106,9 +101,7 @@ var identifier(byte *buf)
 	return (var)buf;
 }
 
-
-var kcmp(byte *key, byte *tmp)
-{
+var kcmp(byte *key, byte *tmp) {
 	var c;
 	var i = 0;
 	while (tmp[i]) {
@@ -122,7 +115,7 @@ var kcmp(byte *key, byte *tmp)
 	}
 	while (key[i] && ahead != EOF && i < MAX_ID_LEN) {
 		if (ahead >= 'a' && ahead <= 'z') {
-		        if (ahead == key[i]) {	
+			if (ahead == key[i]) {
 				tmp[i] = ahead;
 				next();
 				i++;
@@ -139,12 +132,11 @@ var kcmp(byte *key, byte *tmp)
 			return 1;
 		}
 		return 0;
-	}	
+	}
 	return -1;
 }
 
-var spaces()
-{
+var spaces() {
 	while (ahead != EOF) {
 		switch (ahead) {
 		case '\n':
@@ -174,9 +166,7 @@ var spaces()
 	return 0;
 }
 
-
-var hex(var n)
-{
+var hex(var n) {
 	if (n >= 0 && n <= 9) {
 		return '0' + n;
 	} else if (n >= 10 && n <= 15) {
@@ -185,8 +175,7 @@ var hex(var n)
 	return -1;
 }
 
-var byte_string(byte *buf)
-{
+var byte_string(byte *buf) {
 	var i;
 	var l = 0;
 	var c;
@@ -203,8 +192,10 @@ var byte_string(byte *buf)
 			next();
 			return l;
 		}
-		buf[i] = '\\'; i++;
-		buf[i] = 'x'; i++;
+		buf[i] = '\\';
+		i++;
+		buf[i] = 'x';
+		i++;
 		if (ahead == '-') {
 			n = 0;
 		} else if (ahead >= 'a' && ahead <= 'o') {
@@ -212,7 +203,8 @@ var byte_string(byte *buf)
 		} else {
 			error("syntax");
 		}
-		buf[i] = hex(n); i++;
+		buf[i] = hex(n);
+		i++;
 		next();
 		if (ahead == '-') {
 			n = 0;
@@ -221,7 +213,8 @@ var byte_string(byte *buf)
 		} else {
 			error("syntax");
 		}
-		buf[i] = hex(n); i++;
+		buf[i] = hex(n);
+		i++;
 		next();
 		l++;
 	}
@@ -229,9 +222,7 @@ var byte_string(byte *buf)
 	return 0;
 }
 
-
-var string(byte *buf)
-{
+var string(byte *buf) {
 	var i;
 	var c;
 	if (ahead != '"') {
@@ -252,8 +243,7 @@ var string(byte *buf)
 	return 0;
 }
 
-var number()
-{
+var number() {
 	var i;
 	var c;
 	var s = 1;
@@ -282,18 +272,15 @@ var number()
 	return 0;
 }
 
-
-var include()
-{
+var include() {
 	byte *s;
 	spaces();
-	s = (byte*)string(value);
+	s = (byte *)string(value);
 	printf("#include \"%s.h\"\n", s);
 	return 0;
 }
 
-var func()
-{
+var func() {
 	var args;
 	byte *s;
 	spaces();
@@ -305,7 +292,7 @@ var func()
 		nb_methods = -1;
 		next();
 		spaces();
-		s = (byte*)identifier(func_name);
+		s = (byte *)identifier(func_name);
 		spaces();
 		if (class_name[0]) {
 			args = 1;
@@ -315,7 +302,7 @@ var func()
 			printf("var %s(); /*", s);
 		}
 		while (ahead != EOF && ahead != ';') {
-			s = (byte*)identifier(func_name);
+			s = (byte *)identifier(func_name);
 			args++;
 			if (ahead == ',') {
 				next();
@@ -328,20 +315,19 @@ var func()
 		func_name[0] = 0;
 		return 0;
 	}
-	s = (byte*)identifier(func_name);
+	s = (byte *)identifier(func_name);
 	spaces();
 	if (nb_methods < 0) {
 		nb_methods = 0;
 	}
 	if (class_name[0]) {
 		printf("var %s__%s() {\n", class_name, s);
-		printf("\tstruct %s *self = (void*)pop();\n",
-				class_name);
+		printf("\tstruct %s *self = (void*)pop();\n", class_name);
 	} else {
 		printf("var %s() {\n", s);
 	}
 	while (ahead != EOF && ahead != ':' && ahead != ';') {
-		s = (byte*)identifier(var_name);
+		s = (byte *)identifier(var_name);
 		spaces();
 		printf("\tvar %s = pop();\n", s);
 		if (ahead == ',') {
@@ -372,11 +358,10 @@ var func()
 	return 0;
 }
 
-var sizeof_()
-{
+var sizeof_() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	if (ahead != ';') {
 		error("missing ;");
@@ -387,8 +372,7 @@ var sizeof_()
 	return 0;
 }
 
-var return_()
-{
+var return_() {
 	byte *s;
 	spaces();
 	args();
@@ -401,11 +385,10 @@ var return_()
 	return 0;
 }
 
-var getb()
-{
+var getb() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -417,11 +400,10 @@ var getb()
 	return 0;
 }
 
-var setb()
-{
+var setb() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -433,11 +415,10 @@ var setb()
 	return 0;
 }
 
-var clrb()
-{
+var clrb() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -449,8 +430,7 @@ var clrb()
 	return 0;
 }
 
-var gett()
-{
+var gett() {
 	spaces();
 	args();
 	next();
@@ -459,8 +439,7 @@ var gett()
 	return 0;
 }
 
-var minust()
-{
+var minust() {
 	spaces();
 	args();
 	next();
@@ -468,8 +447,7 @@ var minust()
 	return 0;
 }
 
-var plust()
-{
+var plust() {
 	spaces();
 	args();
 	next();
@@ -477,9 +455,7 @@ var plust()
 	return 0;
 }
 
-
-var zerot()
-{
+var zerot() {
 	spaces();
 	args();
 	next();
@@ -487,13 +463,10 @@ var zerot()
 	return 0;
 }
 
-
-
-var get()
-{
+var get() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	if (ahead != ';') {
 		error("missing ;");
@@ -508,11 +481,10 @@ var get()
 	return 0;
 }
 
-var op(var operation)
-{
+var op(var operation) {
 	spaces();
 	args();
-	printf("\t{var tmp = pop();push(tmp %s pop());}\n", (byte*)operation);
+	printf("\t{var tmp = pop();push(tmp %s pop());}\n", (byte *)operation);
 	if (ahead != ';') {
 		error("missing ;");
 	}
@@ -520,8 +492,7 @@ var op(var operation)
 	spaces();
 	return 0;
 }
-var varadd()
-{
+var varadd() {
 	spaces();
 	args();
 	printf("\t{var tmp = pop();push(tmp + (%d * pop()));}\n", SIZE_OF_VAR);
@@ -533,12 +504,10 @@ var varadd()
 	return 0;
 }
 
-
-var set()
-{
+var set() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -554,10 +523,7 @@ var set()
 	return 0;
 }
 
-
-
-var body()
-{
+var body() {
 	printf("{");
 	spaces();
 	if (ahead != '(') {
@@ -565,10 +531,11 @@ var body()
 	}
 	next();
 	spaces();
-	while (ahead >= 'a' && ahead <= 'z') {
+	while ((ahead >= 'a' && ahead <= 'z') || ahead == '"' ||
+	       ahead == '\'' || (ahead >= '0' && ahead <= '9') ||
+	       ahead == '-') {
 		keyword();
 		spaces();
-
 	}
 	if (ahead != ')') {
 		error("missing )");
@@ -579,9 +546,7 @@ var body()
 	return 0;
 }
 
-
-var loop()
-{
+var loop() {
 	spaces();
 	printf("\twhile (1)");
 	body();
@@ -592,57 +557,39 @@ var loop()
 	spaces();
 	printf("\n");
 	return 0;
-
 }
 
-var if_()
-{
+var if_() {
+	var v;
+	var n = 0;
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
-	spaces();
-	
 	printf("{var tmp = pop();");
-	if (!strcmp(s, "true")) {
-		printf("if (tmp)\n");
-	} else if (!strcmp(s, "false") || !strcmp(s, "zero")) {
-		printf("if (!tmp)\n");
-	} else {
-		error("syntax");
+	while (ahead != ';' && ahead != EOF) {
+		if (n > 0) {
+			printf(" else ");
+		}
+		if (ahead >= 'a' && ahead <= 'z') {
+			s = (byte *)identifier(var_name);
+			spaces();
+			if (!strcmp(s, "true")) {
+				printf("if (tmp)\n");
+			} else if (!strcmp(s, "false") || !strcmp(s, "zero")) {
+				printf("if (!tmp)\n");
+			} else if (!strcmp(s, "default") && n > 0) {
+				body();
+				n++;
+				break;
+			} else {
+				error("syntax");
+			}
+		} else {
+			v = number();
+			printf("if (tmp == %ld)\n", v);
+		}
+		body();
+		n++;
 	}
-	body();
-	if (ahead == ';') {
-		printf("}\n");
-		next();
-		spaces();
-		return 0;
-	}
-	s = (byte*)identifier(var_name);
-	if (!strcmp(s, "true")) {
-		printf("else if (tmp)\n");
-	} else if (!strcmp(s, "false") || !strcmp(s, "zero")) {
-		printf("else if (!tmp)\n");
-	} else {
-		error("syntax");
-	}
-
-	body();
-	if (ahead == ';') {
-		printf("}\n");
-		next();
-		spaces();
-		return 0;
-	}
-	s = (byte*)identifier(var_name);
-	if (!strcmp(s, "true")) {
-		printf("else if (tmp)\n");
-	} else if (!strcmp(s, "false") || !strcmp(s, "zero")) {
-		printf("else if (!tmp)\n");
-	} else {
-		error("syntax");
-	}
-	body();
-
 	if (ahead != ';') {
 		error("missing ;");
 	}
@@ -652,18 +599,17 @@ var if_()
 	return 0;
 }
 
-var load(byte *type)
-{
+var load(byte *type) {
 	byte *s = NULL;
 	byte *v;
 	spaces();
-	if (ahead !=  ';') {
-		s = (byte*)identifier(var_name);
+	if (ahead != ';') {
+		s = (byte *)identifier(var_name);
 		spaces();
 	}
 	if (ahead == '.') {
 		next();
-		v = (byte*)identifier(value);
+		v = (byte *)identifier(value);
 		spaces();
 		args();
 		if (!strcmp(s, "this")) {
@@ -688,19 +634,17 @@ var load(byte *type)
 	return 0;
 }
 
-
-var store(byte *type)
-{
+var store(byte *type) {
 	byte *s = NULL;
 	byte *v;
 	spaces();
-	if (ahead !=  ';') {
-		s = (byte*)identifier(var_name);
+	if (ahead != ';') {
+		s = (byte *)identifier(var_name);
 		spaces();
 	}
 	if (ahead == '.') {
 		next();
-		v = (byte*)identifier(value);
+		v = (byte *)identifier(value);
 		spaces();
 		args();
 		if (!strcmp(s, "this")) {
@@ -727,10 +671,7 @@ var store(byte *type)
 	return 0;
 }
 
-
-
-var args()
-{
+var args() {
 	byte *s = NULL;
 	var n = 0;
 	byte *id = NULL;
@@ -743,6 +684,7 @@ var args()
 		identifier(id);
 		spaces();
 		if (ahead == '.') {
+			error("unexpected .");
 			next();
 			spaces();
 			id2 = malloc(MAX_ID_LEN);
@@ -788,8 +730,7 @@ var args()
 	return 0;
 }
 
-var delete_()
-{
+var delete_() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -801,9 +742,7 @@ var delete_()
 	return 0;
 }
 
-
-var print()
-{
+var print() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -815,8 +754,7 @@ var print()
 	return 0;
 }
 
-var println()
-{
+var println() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -828,8 +766,7 @@ var println()
 	return 0;
 }
 
-var continue_()
-{
+var continue_() {
 	spaces();
 	if (ahead != ';') {
 		error("missing ;");
@@ -840,8 +777,7 @@ var continue_()
 	return 0;
 }
 
-var break_()
-{
+var break_() {
 	spaces();
 	if (ahead != ';') {
 		error("missing ;");
@@ -852,10 +788,7 @@ var break_()
 	return 0;
 }
 
-
-
-var printv()
-{
+var printv() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -867,8 +800,7 @@ var printv()
 	return 0;
 }
 
-var exit_()
-{
+var exit_() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -880,10 +812,7 @@ var exit_()
 	return 0;
 }
 
-
-
-var const_()
-{
+var const_() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -894,9 +823,7 @@ var const_()
 	return 0;
 }
 
-
-var new_()
-{
+var new_() {
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -908,8 +835,7 @@ var new_()
 	return 0;
 }
 
-var end()
-{
+var end() {
 	byte *s;
 	spaces();
 	if (func_name[0]) {
@@ -918,7 +844,7 @@ var end()
 		}
 		func_name[0] = 0;
 	} else if (class_name[0]) {
-		s = (byte*)identifier(var_name);
+		s = (byte *)identifier(var_name);
 		spaces();
 		if (ahead != ';' || strcmp("class", s)) {
 			error("syntax");
@@ -929,12 +855,11 @@ var end()
 	spaces();
 	return 0;
 }
-	
-var var_()
-{
+
+var var_() {
 	byte *s;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	if (ahead != ';') {
 		error("missing ;");
@@ -944,16 +869,15 @@ var var_()
 	printf("\tvar %s;\n", s);
 	return 0;
 }
-	
-var data()
-{
+
+var data() {
 	var size = 0;
 	byte *s;
 	var v;
 	var i;
 	var c;
 	spaces();
-	s = (byte*)identifier(var_name);
+	s = (byte *)identifier(var_name);
 	spaces();
 	if (ahead == '"') {
 		printf("byte *%s = (byte*)\"", s);
@@ -1032,8 +956,7 @@ var data()
 	return 0;
 }
 
-var class_()
-{
+var class_() {
 	var size = 0;
 	byte *s;
 	var v;
@@ -1044,10 +967,10 @@ var class_()
 			error("too many object ref");
 		}
 		spaces();
-		s = (byte*)identifier(ref_class[nb_ref]);
+		s = (byte *)identifier(ref_class[nb_ref]);
 		printf("\tstruct %s *", s);
 		spaces();
-		s = (byte*)identifier(ref_name[nb_ref]);
+		s = (byte *)identifier(ref_name[nb_ref]);
 		printf("%s = NULL;\n", s);
 		spaces();
 		if (ahead != ';') {
@@ -1062,7 +985,7 @@ var class_()
 		error("class in class");
 	}
 	spaces();
-	s = (byte*)identifier(class_name);
+	s = (byte *)identifier(class_name);
 	spaces();
 	if (ahead != ':') {
 		error("missing :");
@@ -1074,12 +997,11 @@ var class_()
 	while (class_name[0] && ahead >= 'a' && ahead <= 'z') {
 		keyword();
 		spaces();
-	}	
+	}
 	return 0;
-}	
+}
 
-var get_class_name(byte *first)
-{
+var get_class_name(byte *first) {
 	var i;
 	for (i = 0; i < nb_ref; i++) {
 		if (!strcmp(first, ref_name[i])) {
@@ -1090,8 +1012,7 @@ var get_class_name(byte *first)
 	return 0;
 }
 
-var drop()
-{
+var drop() {
 	spaces();
 	if (ahead != ';') {
 		keyword();
@@ -1103,14 +1024,13 @@ var drop()
 	return 0;
 }
 
-var call(byte *first)
-{
+var call(byte *first) {
 	byte *s;
 	spaces();
 	if (ahead == '.') {
 		next();
 		spaces();
-		s = (byte*)identifier(var_name);
+		s = (byte *)identifier(var_name);
 		spaces();
 		args();
 		if (!strcmp(first, "this")) {
@@ -1118,8 +1038,8 @@ var call(byte *first)
 			printf("\t((var(*)(void))%s__%s)();\n", class_name, s);
 		} else {
 			printf("\tpush((var)%s);\n", first);
-			printf("\t((var(*)(void))%s__%s)();\n", 
-					get_class_name(first), s);
+			printf("\t((var(*)(void))%s__%s)();\n",
+			       get_class_name(first), s);
 		}
 	} else {
 		args();
@@ -1133,14 +1053,47 @@ var call(byte *first)
 	return 0;
 }
 
-var keyword()
-{
+var fill() {
+	args();
+	printf("{var offset = pop(); var val = pop(); var size = pop();");
+	printf("memset(offset, val, size);}\n");
+	if (ahead != ';') {
+		error("missing ;");
+	}
+	next();
+	spaces();
+}
+
+var copy() {
+	args();
+	printf("{var dest = pop(); var src = pop(); var size = pop();");
+	printf("memmove(dest, src, size);}\n");
+	if (ahead != ';') {
+		error("missing ;");
+	}
+	next();
+	spaces();
+}
+
+var init() {
+	args();
+	printf("{var seg = pop(); var dest = pop(); var src = pop(); var size "
+	       "= pop();");
+	printf("memcpy(dest, src + seg, size);}\n");
+	if (ahead != ';') {
+		error("missing ;");
+	}
+	next();
+	spaces();
+}
+
+var keyword() {
 	var i;
 	tmp[0] = 0;
 	switch (ahead) {
 	case 'a':
 		if (!kcmp("add", tmp)) {
-			return op((var)"+");
+			return op((var) "+");
 		}
 		break;
 	case 'b':
@@ -1151,6 +1104,8 @@ var keyword()
 	case 'c':
 		if (!kcmp("class", tmp)) {
 			return class_();
+		} else if (!kcmp("copy", tmp)) {
+			return copy();
 		} else if (!kcmp("const", tmp)) {
 			return const_();
 		} else if (!kcmp("clrb", tmp)) {
@@ -1165,7 +1120,7 @@ var keyword()
 		} else if (!kcmp("drop", tmp)) {
 			return drop();
 		} else if (!kcmp("div", tmp)) {
-			return op((var)"/");
+			return op((var) "/");
 		} else if (!kcmp("data", tmp)) {
 			return data();
 		}
@@ -1174,16 +1129,18 @@ var keyword()
 		if (!kcmp("end", tmp)) {
 			return end();
 		} else if (!kcmp("eq", tmp)) {
-			return op((var)"==");
+			return op((var) "==");
 		} else if (!kcmp("exit", tmp)) {
 			return exit_();
 		}
-		break;	
+		break;
 	case 'f':
 		if (!kcmp("func", tmp)) {
 			return func();
+		} else if (!kcmp("fill", tmp)) {
+			return fill();
 		}
-		break;	
+		break;
 	case 'g':
 		if (!kcmp("get", tmp)) {
 			return get();
@@ -1192,18 +1149,20 @@ var keyword()
 		} else if (!kcmp("gett", tmp)) {
 			return gett();
 		} else if (!kcmp("gt", tmp)) {
-			return op((var)">");
+			return op((var) ">");
 		} else if (!kcmp("ge", tmp)) {
-			return op((var)">=");
+			return op((var) ">=");
 		}
-		break;	
+		break;
 	case 'i':
 		if (!kcmp("include", tmp)) {
 			return include();
+		} else if (!kcmp("init", tmp)) {
+			return init();
 		} else if (!kcmp("if", tmp)) {
 			return if_();
 		}
-		break;	
+		break;
 	case 'l':
 		if (!kcmp("load", tmp)) {
 			return load("var");
@@ -1212,25 +1171,25 @@ var keyword()
 		} else if (!kcmp("loop", tmp)) {
 			return loop();
 		} else if (!kcmp("lt", tmp)) {
-			return op((var)"<");
+			return op((var) "<");
 		} else if (!kcmp("le", tmp)) {
-			return op((var)"<=");
+			return op((var) "<=");
 		}
-		break;	
+		break;
 	case 'm':
 		if (!kcmp("mul", tmp)) {
-			return op((var)"*");
+			return op((var) "*");
 		} else if (!kcmp("minust", tmp)) {
 			return minust();
 		}
-		break;	
+		break;
 	case 'n':
 		if (!kcmp("new", tmp)) {
 			return new_();
 		} else if (!kcmp("ne", tmp)) {
-			return op((var)"!=");
+			return op((var) "!=");
 		}
-		break;	
+		break;
 	case 'p':
 		if (!kcmp("plust", tmp)) {
 			return plust();
@@ -1246,14 +1205,14 @@ var keyword()
 		if (!kcmp("return", tmp)) {
 			return return_();
 		} else if (!kcmp("rem", tmp)) {
-			return op((var)"%");
+			return op((var) "%");
 		}
-		break;	
+		break;
 	case 's':
 		if (!kcmp("set", tmp)) {
 			return set();
 		} else if (!kcmp("sub", tmp)) {
-			return op((var)"-");
+			return op((var) "-");
 		} else if (!kcmp("setb", tmp)) {
 			return setb();
 		} else if (!kcmp("store", tmp)) {
@@ -1263,29 +1222,29 @@ var keyword()
 		} else if (!kcmp("sizeof", tmp)) {
 			return sizeof_();
 		}
-		break;	
+		break;
 	case 't':
-		break;	
+		break;
 	case 'v':
 		if (!kcmp("var", tmp)) {
 			return var_();
 		} else if (!kcmp("varadd", tmp)) {
 			return varadd();
 		}
-		break;	
+		break;
 	case 'w':
 		if (!kcmp("wire", tmp)) {
 			return var_();
 		}
-		break;	
+		break;
 	case 'z':
 		if (!kcmp("zerot", tmp)) {
 			return zerot();
 		}
-		break;	
+		break;
 	default:
 		if (ahead < 'a' || ahead > 'z') {
-			if (ahead >= '0' && ahead <= '9') {
+			if ((ahead >= '0' && ahead <= '9') || ahead == '-') {
 				return const_();
 			} else if (ahead == '"' || ahead == '\'') {
 				return const_();
@@ -1295,8 +1254,8 @@ var keyword()
 		}
 	}
 	i = 0;
-	while (tmp[i]) { 
-		i++; 
+	while (tmp[i]) {
+		i++;
 	}
 	while (ahead != EOF && i < MAX_ID_LEN) {
 		if (ahead >= 'a' && ahead <= 'z') {
@@ -1313,9 +1272,7 @@ var keyword()
 	return -1;
 }
 
-
-var comment()
-{
+var comment() {
 	while (ahead != EOF) {
 		switch (ahead) {
 		case '\n':
@@ -1328,8 +1285,7 @@ var comment()
 	return -1;
 }
 
-var process(var argc, byte **argv)
-{
+var process(var argc, byte **argv) {
 	line = 1;
 	var_name[0] = 0;
 	func_name[0] = 0;
@@ -1350,7 +1306,7 @@ var process(var argc, byte **argv)
 			break;
 		default:
 			if (ahead >= 'a' && ahead <= 'z') {
-				 keyword();
+				keyword();
 			} else {
 				error("unexpected");
 			}
@@ -1366,8 +1322,4 @@ var process(var argc, byte **argv)
 	return 0;
 }
 
-int main(int argc, char *argv[])
-{
-	return (int)process(argc, (byte**)argv);
-}
-
+int main(int argc, char *argv[]) { return (int)process(argc, (byte **)argv); }

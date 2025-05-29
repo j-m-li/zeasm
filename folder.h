@@ -24,7 +24,8 @@ FOLDER *openfldr(const char *fldrname);
  * Get the next entry in the folder.
  * If the entry is itself a folder the returned name ends with a '/'.
  * @param ffd The folder stream object
- * @return The name of the folder entry. NULL if there is no more entry or on failure.
+ * @return The name of the folder entry. NULL if there is no more entry or on
+ * failure.
  */
 char *readfldr(FOLDER *ffd);
 
@@ -48,7 +49,6 @@ int mkfldr(const char *path);
  * @return  0 on success.
  */
 int rmfldr(const char *path);
-
 
 #ifdef __cplusplus
 }
