@@ -77,8 +77,8 @@ var next() {
 	return t;
 }
 
-var error(byte *str) {
-	printf("#error at line %d (%c)  %s\n", line, ahead, str);
+var error(char *str) {
+	printf("#error at line %ld (%c)  %s\n", line, (int)ahead, str);
 	fflush(stdout);
 	exit(-1);
 }
@@ -102,8 +102,8 @@ var identifier(byte *buf) {
 	return (var)buf;
 }
 
-var kcmp(byte *key, byte *tmp) {
-	var c;
+var kcmp(char *k, byte *tmp) {
+	byte *key = (byte*)k;
 	var i = 0;
 	while (tmp[i]) {
 		if (tmp[i] != key[i]) {
@@ -187,7 +187,6 @@ var hex(var n) {
 var byte_string(byte *buf, var offset) {
 	var i;
 	var l = 0;
-	var c;
 	var n = 0;
 	if (ahead != '\'') {
 		error("bytes");
@@ -285,7 +284,13 @@ var include() {
 	byte *s;
 	spaces();
 	s = (byte *)string(value, 0);
-	printf("#include \"%s.h\"\n", s);
+	printf("#include \"../src/%s.h\"\n", s);
+	spaces();
+	if (ahead != ';') {
+		error("missing ;");
+	}
+	next();
+	spaces();
 	return 0;
 }
 
@@ -383,7 +388,6 @@ var sizeof_() {
 }
 
 var return_() {
-	byte *s;
 	spaces();
 	args();
 	if (ahead != ';') {
@@ -489,7 +493,7 @@ var get() {
 	next();
 	spaces();
 	tabs();
-	if (!strcmp("this", s)) {
+	if (!strcmp("this", (char*)s)) {
 		printf("\tpush((var)self);\n");
 	} else {
 		printf("\tpush((var)%s);\n", s);
@@ -513,7 +517,7 @@ var varadd() {
 	spaces();
 	args();
 	tabs();
-	printf("\t{var tmp = pop();push(tmp + (%d * pop()));}\n", SIZE_OF_VAR);
+	printf("\t{var tmp = pop();push(tmp + (%ld * pop()));}\n", SIZE_OF_VAR);
 	if (ahead != ';') {
 		error("missing ;");
 	}
@@ -534,7 +538,7 @@ var set() {
 	next();
 	spaces();
 	tabs();
-	if (!strcmp("this", s)) {
+	if (!strcmp("this", (char*)s)) {
 		printf("\tself = (void*)pop();\n");
 	} else {
 		printf("\t*((var*)&%s) = pop();\n", s);
@@ -585,7 +589,7 @@ var loop() {
 var if_() {
 	var v;
 	var n = 0;
-	byte *s;
+	char *s;
 	spaces();
 	tabs();
 	printf("\t{var tmp = pop();\n");
@@ -597,7 +601,7 @@ var if_() {
 			printf("\t");
 		}
 		if (ahead >= 'a' && ahead <= 'z') {
-			s = (byte *)identifier(var_name);
+			s = (char *)identifier(var_name);
 			spaces();
 			if (!strcmp(s, "true")) {
 				printf("if (tmp)");
@@ -626,7 +630,7 @@ var if_() {
 	return 0;
 }
 
-var load(byte *type) {
+var load(char *type) {
 	byte *s = NULL;
 	byte *v;
 	spaces();
@@ -640,7 +644,7 @@ var load(byte *type) {
 		spaces();
 		args();
 		tabs();
-		if (!strcmp(s, "this")) {
+		if (!strcmp((char*)s, "this")) {
 			printf("\tpush(*((%s*)&self->", type);
 		} else {
 			printf("\tpush(*((%s*)&%s->", type, s);
@@ -664,7 +668,7 @@ var load(byte *type) {
 	return 0;
 }
 
-var store(byte *type) {
+var store(char *type) {
 	byte *s = NULL;
 	byte *v;
 	spaces();
@@ -678,7 +682,7 @@ var store(byte *type) {
 		spaces();
 		args();
 		tabs();
-		if (!strcmp(s, "this")) {
+		if (!strcmp((char*)s, "this")) {
 			printf("\t*((%s*)&self->", type);
 		} else {
 			printf("\t*((%s*)&%s->", type, s);
@@ -728,7 +732,7 @@ var args() {
 		s = malloc(MAX_SIZE);
 		s[0] = 0;
 		while (ahead == '"' || ahead == '\'') {
-			o = strlen(s);
+			o = strlen((char*)s);
 			if (ahead == '"') {
 				string(s, o);
 			} else {
@@ -748,7 +752,7 @@ var args() {
 	if (id) {
 		if (id2) {
 			tabs();
-			if (!strcmp("this", id)) {
+			if (!strcmp("this", (char*)id)) {
 				printf("\tpush((var)self->%s);\n", id2);
 			} else {
 				printf("\tpush((var)%s->%s);\n", id, id2);
@@ -756,7 +760,7 @@ var args() {
 			free(id2);
 		} else {
 			tabs();
-			if (!strcmp("this", id)) {
+			if (!strcmp("this", (char*)id)) {
 				printf("\tpush((var)self);\n");
 			} else {
 				printf("\tpush((var)%s);\n", id);
@@ -769,7 +773,7 @@ var args() {
 		free(s);
 	} else {
 		tabs();
-		printf("\tpush(%d);\n", n);
+		printf("\tpush(%ld);\n", n);
 	}
 	return 0;
 }
@@ -898,7 +902,7 @@ var end() {
 	} else if (class_name[0]) {
 		s = (byte *)identifier(var_name);
 		spaces();
-		if (ahead != ';' || strcmp("class", s)) {
+		if (ahead != ';' || strcmp("class", (char*)s)) {
 			error("syntax");
 		}
 		class_name[0] = 0;
@@ -927,7 +931,6 @@ var data() {
 	var size = 0;
 	byte *s;
 	var v;
-	var i;
 	var c;
 	spaces();
 	s = (byte *)identifier(var_name);
@@ -945,7 +948,7 @@ var data() {
 					}
 					break;
 				}
-				printf("%c", c);
+				printf("%c", (int)c);
 				size++;
 			}
 			spaces();
@@ -959,7 +962,7 @@ var data() {
 				if (c == '-') {
 					printf("0");
 				} else {
-					printf("%1X",  c - 'a' + 1);
+					printf("%1lX",  c - 'a' + 1);
 				}
 				c = next();
 				if (c == '\'') {
@@ -968,7 +971,7 @@ var data() {
 				if (c == '-') {
 					printf("0");
 				} else {
-					printf("%1X",  c - 'a' + 1);
+					printf("%1lX",  c - 'a' + 1);
 				}
 				size++;
 			}
@@ -979,22 +982,22 @@ var data() {
 	while (ahead != EOF && ahead != ';') {
 		v = number();
 		spaces();
-		printf("\\x%02x", v & 0xFF);
-		printf("\\x%02x", (v >> 8) & 0xFF);
-		printf("\\x%02x", (v >> 16) & 0xFF);
+		printf("\\x%02lx", v & 0xFF);
+		printf("\\x%02lx", (v >> 8) & 0xFF);
+		printf("\\x%02lx", (v >> 16) & 0xFF);
 		if (ahead == ',') {
-			printf("\\x%02x", (v >> 24) & 0xFF);
+			printf("\\x%02lx", (v >> 24) & 0xFF);
 			size += 4;
 			next();
 			spaces();
 		} else {
-			printf("\\x%02x", (v >> 24) & 0xFF);
+			printf("\\x%02lx", (v >> 24) & 0xFF);
 			size += 4;
 			break;
 		}
 	}
 	if (ahead == ';') {
-		printf("\"; /* size : %d */\n", size);
+		printf("\"; /* size : %ld */\n", size);
 		next();
 		return 0;
 	} else {
@@ -1004,11 +1007,7 @@ var data() {
 }
 
 var class_() {
-	var size = 0;
 	byte *s;
-	var v;
-	var i;
-	var c;
 	if (func_name[0]) {
 		if (nb_ref >= MAX_REF) {
 			error("too many object ref");
@@ -1051,7 +1050,7 @@ var class_() {
 var get_class_name(byte *first) {
 	var i;
 	for (i = 0; i < nb_ref; i++) {
-		if (!strcmp(first, ref_name[i])) {
+		if (!strcmp((char*)first, (char*)ref_name[i])) {
 			return (var)ref_class[i];
 		}
 	}
@@ -1081,7 +1080,7 @@ var call(byte *first) {
 		s = (byte *)identifier(var_name);
 		spaces();
 		args();
-		if (!strcmp(first, "this")) {
+		if (!strcmp((char*)first, "this")) {
 			tabs();
 			printf("\tpush((var)self);\n");
 			tabs();
@@ -1091,7 +1090,7 @@ var call(byte *first) {
 			printf("\tpush((var)%s);\n", first);
 			tabs();
 			printf("\t((var(*)(void))%s__%s)();\n",
-			       get_class_name(first), s);
+			       (char*)get_class_name(first), s);
 		}
 	} else {
 		args();
@@ -1116,6 +1115,7 @@ var fill() {
 	}
 	next();
 	spaces();
+	return 0;
 }
 
 var copy() {
@@ -1127,6 +1127,7 @@ var copy() {
 	}
 	next();
 	spaces();
+	return 0;
 }
 
 var init() {
@@ -1139,6 +1140,7 @@ var init() {
 	}
 	next();
 	spaces();
+	return 0;
 }
 
 var keyword() {
@@ -1371,7 +1373,7 @@ var process(var argc, byte **argv) {
 	printf("int main(int argc, char *argv[]) {\n");
 	printf("\tpush((var)argv);\n");
 	printf("\tpush((var)argc);\n");
-	printf("\tentry();\n");
+	printf("\tstart();\n");
 	printf("\treturn (int)pop();\n}\n");
 
 	return 0;

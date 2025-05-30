@@ -10,9 +10,9 @@
 	  <a href="https://webassembly.org/getting-started/advanced-tools/">https://webassembly.org/getting-started/advanced-tools/</a>
       <script> 
          let sum; 
-         fetch("test.wasm")
+         fetch("test.cmd")
             .then(bytes => bytes.arrayBuffer()) 
-            .then(mod => WebAssembly.compile(mod)) .then(module => {
+            .then(mod => WebAssembly.compile(mod.slice(128))) .then(module => {
             
             return new WebAssembly.Instance(module) 
          })

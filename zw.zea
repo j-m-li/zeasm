@@ -1,0 +1,8 @@
+
+include "std.zea";
+
+func start argc,argv:
+
+	return 0;
+end;
+

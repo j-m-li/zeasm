@@ -5,7 +5,7 @@
 !
 ! builtin function can return void, but regular functions always return a val 
 
-include "std.zea"
+include "std.zea";
 
 ! a module array of integer
 data ar 0,1,2,3,4,5,? ! ? skips blank characters and comments
@@ -66,7 +66,7 @@ end;
 
 end class; ! end of class myclass
 
-func entry argc,argv:
+func start argc,argv:
 	class term t;
 	var tmp;	! a local variable (integer or pointer to data)
 	class myclass obj;	! a pointer to object of type "myclass"
