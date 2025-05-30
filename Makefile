@@ -1,5 +1,5 @@
-all: bin/zw
-	./bin/zw
+all: bin/zc
+	./bin/zc
 	wat2wasm test.wat
 	zcat src/3o3_exe.cmd.gz > test.cmd
 	cat test.wasm >> test.cmd
@@ -9,9 +9,9 @@ all: bin/zw
 www: all
 	http-server
 
-bin/zw: zw.zea bin/zeasm
-	cat zw.zea | ./bin/zeasm > ./bin/zw.c
-	gcc -g -Wall -ansi bin/zw.c -o bin/zw
+bin/zc: zc.zea bin/zeasm
+	cat zc.zea | ./bin/zeasm > ./bin/zc.c
+	gcc -g -Wall -ansi bin/zc.c -o bin/zc
 
 bin/zeasm: src/zeasm.c
 	mkdir -p bin
