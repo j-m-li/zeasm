@@ -23,6 +23,8 @@ clean:
 	rm -f bin/*
 
 fmt:
-	clang-format --style="{BasedOnStyle: llvm,UseTab: Always,IndentWidth: 8,TabWidth: 8}" -i *.h *.c
+	tidy -i -w 1024 --preserve-entities yes --show-info no --warn-proprietary-attributes no -m *.html
+	js-beautify -n --no-preserve-newlines -w 79 -s 2 *.js
+	clang-format --style="{BasedOnStyle: llvm,UseTab: Always,IndentWidth: 8,TabWidth: 8}" -i src/*.h src/*.c
 
 	
