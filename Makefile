@@ -1,4 +1,6 @@
 all: bin/zc
+	wat2wasm wasi-poll-stdin.wat
+	(wasmtime wasi-poll-stdin.wasm ; echo $?)	
 	./bin/zc
 	wat2wasm test.wat
 	zcat src/3o3_exe.cmd.gz > test.cmd

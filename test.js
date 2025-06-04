@@ -72,21 +72,34 @@ function timeout() {
   d[0] = 0;
   wasm.exports.event(term);
 }
+
+function fd_write()
+{
+	console.log("FFF");
+}
+
 const imp = {
   std: {
     print: print,
+  },
+  wasi_snapshot_preview1: {
+	  fd_write: fd_write,
+	  fd_read: fd_write,
+	  proc_exit: fd_write,
   },
 };
 const wasmBuffer = fs.readFileSync('test.cmd');
 WebAssembly.instantiate(wasmBuffer.slice(128), imp).then(wasmModule => {
   wasm = wasmModule.instance;
   process.stdin.setRawMode(true);
-  term = wasm.exports.term__new();
+  term = wasm.exports.init();
   tm.setTimeout(100).then(timeout);
   process.stdin.on('data', keyboard);
   const {
-    add
+    add,
+    _start
   } = wasmModule.instance.exports;
   const sum = add(40, 10);
   console.log("40 + 10 = " + sum); // Outputs: 11
+	_start();
 });

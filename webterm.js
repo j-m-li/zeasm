@@ -1124,6 +1124,12 @@ function keyboard(e) {
   if (seq == "\r") {
     seq = "\r\n";
   }
+
+    const input = seq;
+    stdinBuffer = Array.from(input + "\n").map(c => c.charCodeAt(0));
+   theApp.wasm.exports._start();
+return;
+
   if (seq == "\x1B") {
     //process.exit(0);
   }
@@ -1158,17 +1164,93 @@ function timeout() {
   theApp.wasm.exports.event(theApp.aterm);
   setTimeout(timeout, 100);
 }
+
+// Minimal WASI polyfill for stdin/stdout
+let stdinBuffer = [];
+let stdoutBuffer = "";
+
+// https://wasix.org/docs/api-reference/wasi/
+//
 const imp = {
   std: {
     print: print,
   },
+     "wasi_snapshot_preview1": {
+        fd_write: function(fd, iovs, iovs_len, nwritten) {
+		const memory = theApp.wasm.exports.memory;
+          // Only support stdout
+          if (fd !== 1) return 52; // EBADF
+          let mem = new Uint8Array(memory.buffer);
+          let bytes = 0;
+          for (let i = 0; i < iovs_len; i++) {
+            let ptr = (new DataView(memory.buffer)).getUint32(iovs + i*8, true);
+            let len = (new DataView(memory.buffer)).getUint32(iovs + i*8 + 4, true);
+            for (let j = 0; j < len; j++) {
+              stdoutBuffer += String.fromCharCode(mem[ptr + j]);
+            }
+            bytes += len;
+          }
+          (new DataView(memory.buffer)).setUint32(nwritten, bytes, true);
+  //        document.getElementById("output").textContent = stdoutBuffer;
+		theApp.term.add_txt(stdoutBuffer);
+		stdoutBuffer = "";
+          return 0;
+        },
+        fd_read: function(fd, iovs, iovs_len, nread) {
+		const memory = theApp.wasm.exports.memory;
+          // Only support stdin
+          if (fd !== 0) return 52; // EBADF
+          let mem = new Uint8Array(memory.buffer);
+          let bytes = 0;
+          let bufIdx = 0;
+          for (let i = 0; i < iovs_len; i++) {
+            let ptr = (new DataView(memory.buffer)).getUint32(iovs + i*8, true);
+            let len = (new DataView(memory.buffer)).getUint32(iovs + i*8 + 4, true);
+            for (let j = 0; j < len && bufIdx < stdinBuffer.length; j++) {
+              mem[ptr + j] = stdinBuffer[bufIdx++];
+              bytes++;
+            }
+          }
+          (new DataView(memory.buffer)).setUint32(nread, bytes, true);
+          stdinBuffer = [];
+          return 0;
+        },
+        proc_exit: function(code) {
+  theApp.term.add_txt(`\n[Program exited with code ${code}]`);
+        },
+        fd_close: () => 0,
+        fd_readdir: () => 0,
+        fd_fdstat_get: () => 0,
+        fd_seek: () => 0,
+        fd_tell: () => 0,
+        fd_prestat_get: () => 0,
+        fd_prestat_dir_name: () => 0,
+
+	path_create_directory: () => 0,
+	path_remove_directory: () => 0,
+	path_open: () => 0,
+	path_unlink_file: () => 0,
+
+	poll_oneoff: () => 0,
+
+        environ_get: () => 0,
+        environ_sizes_get: () => 0,
+
+        args_get: () => 0,
+        args_sizes_get: () => 0,
+
+        clock_res_get: () => 0,
+        clock_time_get: () => 0,
+
+        sched_yield: () => 0
+      }
 };
 fetch("test.cmd").then(bytes => bytes.arrayBuffer()).then(mod => WebAssembly
   .compile(mod.slice(128))).then(module => {
   return new WebAssembly.Instance(module, imp);
 }).then(instance => {
   theApp.wasm = instance;
-  theApp.aterm = instance.exports.term__new();
+  theApp.aterm = instance.exports.init();
   //document.body.addEventListener("input", keyboard);
   setTimeout(timeout, 100);
   const sum = instance.exports.add(10, 40);
